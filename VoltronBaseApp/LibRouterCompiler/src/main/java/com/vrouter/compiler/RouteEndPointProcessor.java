@@ -63,7 +63,6 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     }
 
     private void generateSource(Element element) {
-        String clz = element.getSimpleName().toString();
         if (element.getKind() == ElementKind.CLASS) {
             try {
                 EndPoint endPointAnno = element.getAnnotation(EndPoint.class);
@@ -73,9 +72,8 @@ public class RouteEndPointProcessor extends AbstractProcessor {
                 Writer writer = javaFileObject.openWriter();
 
                 String simpleName = element.getSimpleName().toString() + "$$Generated";
-//                        writer.append("public class " + clsName + " {}");
-                PackageElement packageElement = elementUtils.getPackageOf(element);
-                String packageName = packageElement.getQualifiedName().toString();
+//                PackageElement packageElement = elementUtils.getPackageOf(element);
+                String packageName = "com.voltron.router.routes";//packageElement.getQualifiedName().toString();
 
                 writer
                         .append("package ").append(packageName).append(";\n\n")

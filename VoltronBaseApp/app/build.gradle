@@ -6,6 +6,7 @@ apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 27
+
     defaultConfig {
         applicationId "me.tangni.voltron"
         minSdkVersion 16
@@ -14,12 +15,37 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-    buildTypes {
+
+    signingConfigs {
+        debug {
+            storeFile file("../voltron-demo.keystore")
+            storePassword "voltron"
+            keyAlias "voltron"
+            keyPassword "voltron"
+            v2SigningEnabled true
+        }
+
         release {
+            storeFile file("../voltron-demo.keystore")
+            storePassword "voltron"
+            keyAlias "voltron"
+            keyPassword "voltron"
+            v2SigningEnabled true
+        }
+    }
+
+    buildTypes {
+        debug {
             minifyEnabled false
-//            minifyEnabled true
-//            zipAlignEnabled true
-//            shrinkResources true
+            signingConfig signingConfigs.release
+        }
+
+        release {
+//            minifyEnabled false
+            minifyEnabled true
+            zipAlignEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
