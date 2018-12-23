@@ -9,12 +9,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/LibNetwork" />
-            <option value="$PROJECT_DIR$/LibRouterAnnotation" />
-            <option value="$PROJECT_DIR$/LibRouterApi" />
-            <option value="$PROJECT_DIR$/LibRouterCompiler" />
             <option value="$PROJECT_DIR$/LibsAbstraction" />
-            <option value="$PROJECT_DIR$/ModDemoA" />
-            <option value="$PROJECT_DIR$/ModDemoB" />
+            <option value="$PROJECT_DIR$/ModDemoJava" />
+            <option value="$PROJECT_DIR$/ModDemoKotlin" />
+            <option value="$PROJECT_DIR$/VRouterAnnotation" />
+            <option value="$PROJECT_DIR$/VRouterApi" />
+            <option value="$PROJECT_DIR$/VRouterCompiler" />
             <option value="$PROJECT_DIR$/app" />
           </set>
         </option>

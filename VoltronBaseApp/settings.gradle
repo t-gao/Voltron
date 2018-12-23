@@ -1,1 +1,1 @@
-include ':app', ':LibsAbstraction', ':LibNetwork', ':ModDemoA', ':ModDemoB', ':LibRouterApi', ':LibRouterAnnotation', ':LibRouterCompiler'
+include ':app', ':LibsAbstraction', ':LibNetwork', ':ModDemoJava', ':ModDemoKotlin', ':VRouterApi', ':VRouterAnnotation', ':VRouterCompiler'
