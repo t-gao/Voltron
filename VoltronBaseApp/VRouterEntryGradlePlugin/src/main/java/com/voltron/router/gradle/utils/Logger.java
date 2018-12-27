@@ -11,8 +11,7 @@ public class Logger {
 
     public static void i(String info) {
         if (null != info && null != logger) {
-//            logger.i("VRouter::Gradle Plugin >>> " + info);
-            logger.lifecycle("VRouter::Gradle Plugin >>> " + info);
+            logger.info("VRouter::Gradle Plugin >>> " + info);
         }
     }
 

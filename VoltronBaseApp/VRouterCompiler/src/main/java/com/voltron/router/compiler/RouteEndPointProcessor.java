@@ -45,8 +45,6 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer filer;
 
-//    private HashMap<String, GenNode> nodes = new HashMap<>();
-
     // 分组信息
     private HashMap<String, Set<EndPointMeta>> groups = new HashMap<>();
     // group name 为空的分组
@@ -100,9 +98,6 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             }
         } else {
             logger.i("processing over");
-//            for (GenNode node : nodes.values()) {
-//                generateSource(node.javaFileObject, node.simpleName, node.annoVal);
-//            }
             if (!groups.isEmpty()) {
                 for (Map.Entry<String, Set<EndPointMeta>> entry : groups.entrySet()) {
                     try {
@@ -127,16 +122,15 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
     private void processElement(Element element) {
         if (element.getKind() == ElementKind.CLASS) {
-//            EndPoint endPointAnno = element.getAnnotation(EndPoint.class);
             EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation(element.getAnnotation(EndPoint.class), element);
             if (endPointMeta == null) {
                 return;
             }
 
-//            String path = endPointMeta.getPath();
-//            if (StringUtils.isEmpty(path)) {
-//                return;
-//            }
+            String path = endPointMeta.getPath();
+            if (StringUtils.isEmpty(path)) {
+                return;
+            }
 
             String groupName = endPointMeta.getGroup();
             if (StringUtils.isEmpty(groupName)) {
@@ -149,36 +143,34 @@ public class RouteEndPointProcessor extends AbstractProcessor {
                 }
                 groupEndPoints.add(endPointMeta);
             }
-
         }
     }
 
-//    private void processElementOld(Element element) {
-//        if (element.getKind() == ElementKind.CLASS) {
-//            try {
-//                EndPoint endPointAnno = element.getAnnotation(EndPoint.class);
-//                String annoVal = endPointAnno.value();
-//
-////                PackageElement packageElement = elementUtils.getPackageOf(element);
-//                String packageName = Constants.GENERATED_PACKAGE;//packageElement.getQualifiedName().toString();
-//
-//                String qualifiedName = ((TypeElement)element).getQualifiedName().toString() + "__Generated";
-//                logger.i("qualified name: " + qualifiedName);
-//
-//                String simpleName = "VROUTER_" + element.getSimpleName().toString() + "__Generated";
-//                String clsName = packageName + "." + simpleName; //;
-//
-//                JavaFileObject javaFileObject = filer.createSourceFile(clsName, element);
-//                nodes.put(simpleName, new GenNode(javaFileObject, simpleName, annoVal));
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//                logger.e(e, element);
-//            }
-//
-//        }
-//    }
-
-
+    /**
+     * Generates a java source file like below:
+     *
+     * package com.voltron.router.routes;
+     *
+     * import com.voltron.demo.app.SecondActivity;
+     * import com.voltron.router.base.EndPointMeta;
+     * import java.lang.String;
+     * import java.util.Map;
+     *
+     *
+     * public class VRouter__M__app__G__main {
+     *   public static void load(Map<String, EndPointMeta> routes) {
+     *     routes.put("/main/second", EndPointMeta.build("main", "/main/second", SecondActivity.class));
+     *   }
+     *
+     *   public static String myName() {
+     *     return "com.voltron.router.routes.VRouter__M__app__G__main";
+     *   }
+     * }
+     *
+     * @param groupName 分组名
+     * @param endPointMetas 分组内的路由端点集合
+     * @throws IOException
+     */
     private void generateGroupFile(String groupName, Set<EndPointMeta> endPointMetas) throws IOException {
         if (groupName == null) {
             groupName = "";
@@ -238,36 +230,4 @@ public class RouteEndPointProcessor extends AbstractProcessor {
                         .build())
                 .build().writeTo(filer);
     }
-
-//    private void generateSource(JavaFileObject javaFileObject, String simpleName, String annoVal) {
-//        String packageName = "com.voltron.router.routes";
-//
-//        Writer writer = null;
-//        try {
-//            writer = javaFileObject.openWriter();
-//            writer
-//                    .append("package ").append(packageName).append(";\n\n")
-//                    .append("public class ").append(simpleName).append(" {\n")
-//                    .append("    public static String getAnnoVal() {\n")
-//                    .append("        return ").append("\"").append(annoVal).append("\";\n")
-//                    .append("    }\n")
-//                    .append("}");
-//            writer.flush();
-//            writer.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-//    private static class GenNode {
-//        JavaFileObject javaFileObject;
-//        String simpleName;
-//        String annoVal;
-//
-//        public GenNode(JavaFileObject javaFileObject, String simpleName, String annoVal) {
-//            this.javaFileObject = javaFileObject;
-//            this.simpleName = simpleName;
-//            this.annoVal = annoVal;
-//        }
-//    }
 }

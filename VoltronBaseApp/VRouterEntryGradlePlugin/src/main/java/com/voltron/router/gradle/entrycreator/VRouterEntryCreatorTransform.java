@@ -17,7 +17,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.json.JSONObject;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -71,7 +70,6 @@ public class VRouterEntryCreatorTransform extends Transform {
             Logger.i("Looping TransformInput");
 
             for (JarInput jarInput : input.getJarInputs()) {
-//            input.getJarInputs().parallelStream().forEach(jarInput -> {
                 File src = jarInput.getFile();
                 File dst = transformInvocation.getOutputProvider().getContentLocation(
                         jarInput.getName(), jarInput.getContentTypes(), jarInput.getScopes(),
@@ -85,11 +83,9 @@ public class VRouterEntryCreatorTransform extends Transform {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-//            });
             }
 
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-//            input.getDirectoryInputs().parallelStream().forEach(directoryInput -> {
                 File src = directoryInput.getFile();
                 File dst = transformInvocation.getOutputProvider().getContentLocation(
                         directoryInput.getName(), directoryInput.getContentTypes(),
@@ -103,7 +99,6 @@ public class VRouterEntryCreatorTransform extends Transform {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-//            });
             }
         }
 
@@ -163,17 +158,18 @@ public class VRouterEntryCreatorTransform extends Transform {
     }
 
     /**
-     * 生成格式如下的代码，其中ServiceInit_xxx由注解生成器生成。
+     * 生成路由统一入口 VRouterEntry，负责将由注解生成器生成的 VRouter__M__xx 的分组管理类的类名加载进内存。
      * <pre>
-     * package com.sankuai.waimai.router.generated;
-     *
-     * public class VRouterEntry {
-     *
-     *     public static void init() {
-     *         ServiceInit_xxx1.init();
-     *         ServiceInit_xxx2.init();
-     *     }
-     * }
+         package com.voltron.router.routes;
+
+         import java.util.ArrayList;
+
+         public class VRouterEntry {
+         public static void init(ArrayList<String> var0) {
+             var0.add(VRouter__M__app__G__main.myName());
+             var0.add(VRouter__M__ModDemoJava__G__df.myName());
+             }
+         }
      * </pre>
      */
     private void generateVRouterEntryClass(String directory, Set<String> classes) {
@@ -198,7 +194,6 @@ public class VRouterEntryCreatorTransform extends Transform {
 
             mv.visitCode();
 
-//            mv.visitIntInsn();
             for (String clazz : classes) {
                 String owner = clazz.replace('.', '/');
                 Logger.i("  visiting method myName() of " + owner);
@@ -222,8 +217,6 @@ public class VRouterEntryCreatorTransform extends Transform {
 
             mv.visitMaxs(0, 0);
             mv.visitInsn(Opcodes.RETURN);
-//            mv.visitLdcInsn("helllo");
-//            mv.visitInsn(Opcodes.ARETURN);
             mv.visitEnd();
             cv.visitEnd();
 
@@ -239,68 +232,4 @@ public class VRouterEntryCreatorTransform extends Transform {
         }
     }
 
-//    /**
-//     * 生成格式如下的代码，其中ServiceInit_xxx由注解生成器生成。
-//     * <pre>
-//     * package com.sankuai.waimai.router.generated;
-//     *
-//     * public class VRouterEntry {
-//     *
-//     *     public static void init() {
-//     *         ServiceInit_xxx1.init();
-//     *         ServiceInit_xxx2.init();
-//     *     }
-//     * }
-//     * </pre>
-//     */
-//    private void generateVRouterEntryClass(String directory, Set<String> classes) {
-//
-//        Logger.i("generateVRouterEntryClass, directory: " + directory);
-//        if (classes.isEmpty()) {
-//            Logger.i("skipped, no service found");
-//            return;
-//        }
-//
-//        try {
-//            Logger.i("start...");
-//            long ms = System.currentTimeMillis();
-//
-//            ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-//            ClassVisitor cv = new ClassVisitor(Opcodes.ASM5, writer) {};
-//            String className = GENERATED_PACKAGE_PATH + "/VRouterEntry";
-//            cv.visit(50, Opcodes.ACC_PUBLIC, className, null, "java/lang/Object", null);
-//
-//            MethodVisitor mv = cv.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC,
-//                    "init", "()Ljava/lang/String;", null, null);
-//
-//            mv.visitCode();
-//
-////            mv.visitIntInsn();
-//            for (String clazz : classes) {
-//                String owner = clazz.replace('.', '/');
-//                Logger.i("  visiting method load() of " + owner);
-//                mv.visitMethodInsn(Opcodes.INVOKESTATIC, owner,
-//                        "load",
-//                        "()Ljava/lang/String;",
-//                        false);
-//            }
-//
-//            mv.visitMaxs(0, 0);
-////            mv.visitInsn(Opcodes.RETURN);
-//            mv.visitLdcInsn("helllo");
-//            mv.visitInsn(Opcodes.ARETURN);
-//            mv.visitEnd();
-//            cv.visitEnd();
-//
-//            File dest = new File(directory, className + SdkConstants.DOT_CLASS);
-//            dest.getParentFile().mkdirs();
-//            new FileOutputStream(dest).write(writer.toByteArray());
-//
-//            Logger.i("end, cost " + (System.currentTimeMillis() - ms) + " ms");
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            // TODO: 2018/12/25 handle exception, maybe abort building
-//        }
-//    }
 }

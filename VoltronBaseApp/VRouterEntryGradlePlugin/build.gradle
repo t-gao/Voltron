@@ -7,18 +7,11 @@ repositories {
 }
 
 dependencies {
-//    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation gradleApi()
     implementation localGroovy()
     implementation 'com.android.tools.build:gradle:3.2.1'
-//    compile 'com.android.tools.build:gradle:2.1.3'
     implementation 'com.squareup:javapoet:1.10.0'
-    implementation 'org.json:json:20180813'
 }
-
-//dependencies {
-//    implementation 'com.android.tools.build:gradle:2.1.3'
-//}
 
 //publish to local directory
 def versionName = "1.0.0"

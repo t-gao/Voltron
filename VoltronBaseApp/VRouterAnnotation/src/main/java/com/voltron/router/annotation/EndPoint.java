@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
+ * 路由端点注解
  */
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
