@@ -21,4 +21,7 @@
 #-renamesourcefileattribute SourceFile
 
 #VRouter
+-dontwarn javax.lang.model.element.**
+
 -keep public class com.voltron.router.routes.**{*;}
+#-keep public javax.lang.model.element.Element{*;}

@@ -6,9 +6,7 @@ import android.view.View;
 
 import com.voltron.router.annotation.EndPoint;
 
-import com.voltron.router.api.VRouter;
-
-@EndPoint("/modulea/demoa")
+@EndPoint(group = "df", value = "/modulea/demoa")
 public class DemoAActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override
@@ -22,7 +20,6 @@ public class DemoAActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btn_test) {
-            VRouter.init(this);
         }
     }
 }

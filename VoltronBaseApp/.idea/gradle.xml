@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/VRouterAnnotation" />
             <option value="$PROJECT_DIR$/VRouterApi" />
             <option value="$PROJECT_DIR$/VRouterCompiler" />
+            <option value="$PROJECT_DIR$/VRouterEntryGradlePlugin" />
             <option value="$PROJECT_DIR$/app" />
           </set>
         </option>
