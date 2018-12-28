@@ -1,16 +1,13 @@
-package com.voltron.router.compiler.utils;
+package com.voltron.router.base;
 
 import com.voltron.router.annotation.EndPoint;
-import com.voltron.router.base.EndPointMeta;
-
-import org.apache.commons.lang3.StringUtils;
 
 import javax.lang.model.element.Element;
 
 public class AnnotationUtil {
 
     /**
-     * 从注解 {@link com.voltron.router.annotation.EndPoint EndPoint} 的 value 中截取出分组 group 的值
+     * 从注解 {@link EndPoint EndPoint} 的 value 中截取出分组 group 的值
      * @param path 路由path，即 EndPoint 注解的 value
      * @return 分组名
      */

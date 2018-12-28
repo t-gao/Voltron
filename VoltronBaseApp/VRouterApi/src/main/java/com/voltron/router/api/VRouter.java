@@ -1,18 +1,21 @@
 package com.voltron.router.api;
 
 import android.app.Activity;
+import android.content.Context;
+import android.support.v4.app.Fragment;
+
+import com.voltron.router.EndPointType;
 
 public class VRouter {
     public static void init() {
         VRouterInternal.init();
     }
 
-    // TODO: 简单演示跳转，后续需优化方法命名、传递参数等
-    public static boolean go(Activity activity, String groupName, String path) {
-        if (activity == null || path == null || path.isEmpty()) {
-            return false;
-        }
+    public static EndPointType resolveType(String path) {
+        return EndPointType.OTHER;//FIXME
+    }
 
-        return VRouterInternal.go(activity, groupName, path);
+    public static Postcard.Builder with(Context context) {
+        return new Postcard.Builder(context);
     }
 }

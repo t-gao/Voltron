@@ -1,11 +1,16 @@
 package com.voltron.router.api;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
 import java.lang.reflect.InvocationTargetException;
@@ -77,7 +82,22 @@ class VRouterInternal {
         }
     }
 
-    static boolean go(@NonNull Activity activity, String groupName, @NonNull String path) {
+    static boolean go(@Nullable Postcard postcard) {
+        if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getPath())) {
+            return false;
+        }
+
+        String path = postcard.getPath();
+        String group = postcard.getGroup();
+        if (group == null || group.isEmpty()) {
+            group = AnnotationUtil.extractGroupNameFromPath(path);
+        }
+        return go(postcard.getContext(), group, path, postcard);
+    }
+
+    private static boolean go(@NonNull Context context, String groupName, @NonNull String path,
+                              @NonNull Postcard postcard) {
+
         Log.d(TAG, "go, path: " + path);
         HashMap<String, EndPointMeta> group;
         if (TextUtils.isEmpty(groupName)) {
@@ -103,7 +123,33 @@ class VRouterInternal {
         }
 
         try {
-            activity.startActivity(new Intent(activity, endpointClass));
+            Intent intent = new Intent(context, endpointClass);
+            Bundle extras = postcard.getExtras();
+            if (extras != null) {
+                intent.putExtras(extras);
+            }
+            intent.setFlags(postcard.getIntentFlags());
+
+            Fragment fragment = postcard.getFragment();
+            if (fragment != null) {
+                if (postcard.isForResult()) {
+                    fragment.startActivityForResult(intent, postcard.getRequestCode());
+                } else {
+                    fragment.startActivity(intent);
+                }
+            } else {
+                if (context instanceof Activity) {
+                    if (postcard.isForResult()) {
+                        ((Activity)context).startActivityForResult(intent, postcard.getRequestCode());
+                    } else {
+                        ((Activity)context).startActivity(intent);
+                    }
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                }
+            }
+
             return true;
         } catch (Exception e) {
             Log.e(TAG, "START ACTIVITY ERR ", e);

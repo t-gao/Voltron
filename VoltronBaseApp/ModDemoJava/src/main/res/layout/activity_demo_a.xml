@@ -6,6 +6,14 @@
     android:layout_height="match_parent"
     tools:context="com.voltron.router.demo.mod_java.DemoAActivity">
 
+    <TextView
+        android:id="@+id/ext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:gravity="center_horizontal"
+        />
+
     <Button
         android:id="@+id/btn_test"
         android:layout_width="wrap_content"
@@ -14,7 +22,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:text="Module A"
+        android:text="Return"
         android:padding="20dp"
         android:textSize="20sp"/>
 </android.support.constraint.ConstraintLayout>

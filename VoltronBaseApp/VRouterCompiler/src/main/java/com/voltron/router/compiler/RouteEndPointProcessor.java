@@ -8,8 +8,8 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.voltron.router.annotation.EndPoint;
+import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
-import com.voltron.router.compiler.utils.AnnotationUtil;
 import com.voltron.router.compiler.utils.Logger;
 import com.voltron.router.compiler.utils.PoetUtil;
 
