@@ -5,24 +5,45 @@ import javax.lang.model.element.Element;
 public class EndPointMeta {
     private String group;
 
-    /**
-     * 完整路由路径，包含group
-     */
-    private String path;
-
     private Class endPointClass;
 
     private Element element;
 
-    EndPointMeta(String group, String path, Class endPointClass) {
+
+    private String scheme;
+    private String host;
+    private String path;
+
+    /**
+     * 完整路由路径，[scheme]://[host][path]，或 [host][path]
+     * 如果注解指定了[value]，则取 [value] 为 route
+     */
+    private String route;
+
+    /**
+     * 完整路由路径，方便一次性指定 scheme+host+path
+     */
+    private String value;
+
+    private EndPointMeta(String group, String scheme, String host, String path, String value,
+                 String route, Class endPointClass) {
         this.group = group;
+        this.scheme = scheme;
+        this.host = host;
         this.path = path;
+        this.value = value;
+        this.route = route;
         this.endPointClass = endPointClass;
     }
 
-    public EndPointMeta(String group, String path, Element element) {
+    public EndPointMeta(String group, String scheme, String host, String path, String value,
+                        String route, Element element) {
         this.group = group;
+        this.scheme = scheme;
+        this.host = host;
         this.path = path;
+        this.value = value;
+        this.route = route;
         this.element = element;
     }
 
@@ -38,11 +59,28 @@ public class EndPointMeta {
         return path;
     }
 
+    public String getScheme() {
+        return scheme;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public String getRoute() {
+        return route;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
     public Class getEndPointClass() {
         return endPointClass;
     }
 
-    public static EndPointMeta build(String group, String path, Class endPointClass) {
-        return new EndPointMeta(group, path, endPointClass);
+    public static EndPointMeta build(String group, String scheme, String host, String path, String value,
+                                     String route, Class endPointClass) {
+        return new EndPointMeta(group, scheme, host, path, value, route, endPointClass);
     }
 }

@@ -33,7 +33,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 
 @AutoService(Processor.class)
@@ -42,7 +41,6 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     private String moduleName;
 
     private Logger logger;
-    private Elements elementUtils;
     private Filer filer;
 
     // 分组信息
@@ -53,15 +51,16 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
         super.init(processingEnvironment);
-        elementUtils = processingEnvironment.getElementUtils();
         filer = processingEnvironment.getFiler();
-
         logger = new Logger(processingEnvironment.getMessager());
+
+        logger.i("RouteEndPointProcessor init");
 
         // 从 build.gradle 里的配置读取 module name
         Map<String, String> options = processingEnv.getOptions();
         if (MapUtils.isNotEmpty(options)) {
             moduleName = options.get(Constants.KEY_MODULE_NAME);
+            logger.i("RouteEndPointProcessor init for module: " + moduleName);
         }
 
         if (StringUtils.isNotEmpty(moduleName)) {
@@ -122,13 +121,12 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
     private void processElement(Element element) {
         if (element.getKind() == ElementKind.CLASS) {
-            EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation(element.getAnnotation(EndPoint.class), element);
+            EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation2(element.getAnnotation(EndPoint.class), element);
             if (endPointMeta == null) {
                 return;
             }
 
-            String path = endPointMeta.getPath();
-            if (StringUtils.isEmpty(path)) {
+            if (StringUtils.isEmpty(endPointMeta.getRoute())) {
                 return;
             }
 
@@ -169,7 +167,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
      *
      * @param groupName 分组名
      * @param endPointMetas 分组内的路由端点集合
-     * @throws IOException
+     * @throws IOException IOException
      */
     private void generateGroupFile(String groupName, Set<EndPointMeta> endPointMetas) throws IOException {
         if (groupName == null) {
@@ -207,8 +205,10 @@ public class RouteEndPointProcessor extends AbstractProcessor {
         for (EndPointMeta endPointMeta : endPointMetas) {
             ClassName className = ClassName.get((TypeElement) endPointMeta.getElement());
             String path = endPointMeta.getPath();
-            initMethod.addStatement("routes.put($S, $T.build($S, $S, $T.class))",
-                    path, EndPointMeta.class, groupName, path, className);
+            String route = endPointMeta.getRoute();
+            initMethod.addStatement("routes.put($S, $T.build($S, $S, $S, $S, $S, $S, $T.class))",
+                    route, EndPointMeta.class, groupName, endPointMeta.getScheme(), endPointMeta.getHost(),
+                    path, endPointMeta.getValue(), route, className);
         }
 
         String pkgName = Constants.GENERATED_PACKAGE;

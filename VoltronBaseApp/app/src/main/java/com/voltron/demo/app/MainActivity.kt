@@ -13,17 +13,46 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
         btn_go.setOnClickListener {
-
-            // SecondActivity
-//            VRouter.go(this, "main", "/main/second")
-
-            // DemoAActivity
             VRouter.with(this)
-                    .group("abc")
                     .path("/modulea/demoa")
                     .stringExtra("EXT_HH", "EXT-----VALUE")
                     .forResult(100)
+                    .go()
+        }
+
+        btn_go_within_module.setOnClickListener {
+            VRouter.with(this)
+                    .path("/main/second")
+                    .go()
+        }
+
+        btn_scheme.setOnClickListener {
+            VRouter.with(this)
+                    .route("voltron://demo.com/scheme")
+                    .go()
+        }
+
+        btn_scheme_host_path.setOnClickListener {
+            VRouter.with(this)
+                    .scheme("voltronTest")
+                    .host("test.net")
+                    .path("/scheme_host_path")
+                    .go()
+        }
+
+        btn_go_to_kotlin.setOnClickListener {
+            VRouter.with(this)
+                    .scheme("voltron")
+                    .host("kotlin.com")
+                    .path("/test")
+                    .go()
+        }
+
+        btn_test_path_only.setOnClickListener {
+            VRouter.with(this)
+                    .path("/pathonly")
                     .go()
         }
     }

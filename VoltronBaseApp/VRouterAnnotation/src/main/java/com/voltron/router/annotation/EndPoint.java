@@ -12,18 +12,23 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface EndPoint {
 
-    // 显式指定分组名
-    String group() default "";
+    /**
+     * 如 http 或 https，或自定义 scheme
+     */
+    String scheme() default "";
 
     /**
-     * 完整的路由路径，包括 group 和 path。group 部分可不配置，若配置，group 和 path 需要由 "/" 分隔。
-     * 合法的 value 取值举例如下：
-     *  0. "/ab/cd"   --  group 为 "ab", path 为 "/ab/cd"
-     *  1. "ab/cd"   --  group 为 "ab", path 为 "ab/cd"
-     *  2. "/ab/cd/"   --  group 为 "ab", path 为 "/ab/cd/"
-     *  3. "efg"   --  group 为 空, path 为 "efg"
-     *  4. "/xyz"   --  group 为 空, path 为 "/xyz"
-     *  5. "op/"   --  group 为 空, path 为 "op/"
+     * 如 voltron.com
+     */
+    String host() default "";
+
+    /**
+     * 必须以 "/" 开头，如 "/demopage"
+     */
+    String path() default "";
+
+    /**
+     * 完整的路由路径，包括 scheme、host 和 path。优先级高于单独指定的scheme、host 和 path。
      */
     String value() default "";
 }

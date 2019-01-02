@@ -3,7 +3,10 @@
     package="com.voltron.router.demo.mod_java">
 
     <application>
-        <activity android:name="com.voltron.router.demo.mod_java.DemoAActivity"/>
+        <activity android:name=".DemoAActivity" />
+        <activity android:name=".DemoSchemeActivity" />
+        <activity android:name=".DemoSchemeHostPathActivity" />
+        <activity android:name=".DemoPathOnlyActivity"></activity>
     </application>
 
 </manifest>

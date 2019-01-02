@@ -5,21 +5,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.voltron.demo.app.SecondActivity">
+    tools:context=".DemoPathOnlyActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="WITHIN APP MODULE"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="80dp"
-        />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="route: /main/second"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="80dp"
-        />
-
+        android:text="pathonly"/>
 </LinearLayout>

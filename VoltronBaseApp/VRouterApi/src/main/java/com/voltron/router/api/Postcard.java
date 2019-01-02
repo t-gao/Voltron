@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
+
+import com.voltron.router.base.AnnotationUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -14,8 +17,10 @@ public class Postcard {
     Context context;
     Fragment fragment;
 
-    String group;
+    String scheme;
+    String host;
     String path;
+    String route;
     Bundle extras;
     int intentFlags;
     boolean forResult;
@@ -46,11 +51,30 @@ public class Postcard {
     }
 
     String getGroup() {
+        String group = AnnotationUtil.extractGroupNameFromRoute(route);
+        if (TextUtils.isEmpty(group)) {
+            group = AnnotationUtil.extractGroupNameFromSchemeHost(scheme, host);
+        }
         return group;
+    }
+
+    public String getScheme() {
+        return scheme;
+    }
+
+    public String getHost() {
+        return host;
     }
 
     String getPath() {
         return path;
+    }
+
+    public String getRoute() {
+        if (TextUtils.isEmpty(route)) {
+            route = AnnotationUtil.buildRouteFromSchemeHostPath(scheme, host, path);
+        }
+        return route;
     }
 
     Bundle getExtras() {
@@ -112,21 +136,28 @@ public class Postcard {
             return this;
         }
 
-        /**
-         * 显式地指定分组名。
-         *
-         * NOTE: 会覆盖 path 中隐含的分组名。
-         *
-         * @param group 显式指定的分组名
-         * @return this
-         */
-        public Builder group(String group) {
-            P.group = group;
+        public Builder scheme(String scheme) {
+            P.scheme = scheme;
+            return this;
+        }
+
+        public Builder host(String host) {
+            P.host = host;
             return this;
         }
 
         public Builder path(String path) {
             P.path = path;
+            return this;
+        }
+
+        /**
+         * 直接指定完整的路由路径，其中包含 scheme、host、path，会覆盖三者相应单独指定的值。
+         * @param route 路由路径
+         * @return this
+         */
+        public Builder route(String route) {
+            P.route = route;
             return this;
         }
 

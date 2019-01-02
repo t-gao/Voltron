@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import com.voltron.router.annotation.EndPoint;
 
-@EndPoint(group = "abc",value = "/modulea/demoa")
+@EndPoint(value = "/modulea/demoa")
 public class DemoAActivity extends AppCompatActivity implements View.OnClickListener {
 
     @Override

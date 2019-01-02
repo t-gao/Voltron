@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
 import java.lang.reflect.InvocationTargetException;
@@ -22,10 +21,13 @@ import java.util.Map;
 class VRouterInternal {
     private static final String TAG = "VRouterInternal";
 
-    private static String noNameGroupClassName;
-    private static HashMap<String, String> groupClassNameMap = new HashMap<>();
+    // 分组名groupName 和 各个模块的以该名为分组的类名的映射关系
+    private static ArrayList<String> anonymousGroupClassNames;
+    private static HashMap<String, ArrayList<String>> groupClassNamesMap = new HashMap<>();
+
+    //  分组名groupName 和 该分组内的路由信息的映射关系
     private static HashMap<String, HashMap<String, EndPointMeta>> groups = new HashMap<>();
-    private static HashMap<String, EndPointMeta> noNameGroup = new HashMap<>();
+    private static HashMap<String, EndPointMeta> anonymousGroup;
 
     static void init() {
         Log.d(TAG, "VROUTER GROUP >>>> init");
@@ -42,11 +44,19 @@ class VRouterInternal {
             // don't load the routes now, load a group when first used
             for (String groupClassName : groupClassNames) {
                 if (groupClassName.endsWith("G__")) {
-                    noNameGroupClassName = groupClassName;
+                    if (anonymousGroupClassNames == null) {
+                        anonymousGroupClassNames = new ArrayList<>();
+                    }
+                    anonymousGroupClassNames.add(groupClassName);
                 } else {
                     int mid = groupClassName.lastIndexOf("G__");
                     String groupName = groupClassName.substring(mid + "G__".length());
-                    groupClassNameMap.put(groupName, groupClassName);
+                    ArrayList<String> groupClassNameList = groupClassNamesMap.get(groupName);
+                    if (groupClassNameList == null) {
+                        groupClassNameList = new ArrayList<>();
+                        groupClassNamesMap.put(groupName, groupClassNameList);
+                    }
+                    groupClassNameList.add(groupClassName);
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -61,19 +71,16 @@ class VRouterInternal {
     }
 
     static boolean go(@Nullable Postcard postcard) {
-        if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getPath())) {
+        if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
             return false;
         }
 
-        String path = postcard.getPath();
+        String route = postcard.getRoute();
         String groupName = postcard.getGroup();
-        if (groupName == null || groupName.isEmpty()) {
-            groupName = AnnotationUtil.extractGroupNameFromPath(path);
-        }
 
-        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndPath(groupName, path);
+        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
         if (endPointMeta == null) {
-            Log.e(TAG, "END POINT NOT FOUND with path " + path + "!!!");
+            Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
             return false;
         }
 
@@ -89,11 +96,11 @@ class VRouterInternal {
             HashMap<String, EndPointMeta> routes = new HashMap<>();
             method.invoke(null, routes);
             if (TextUtils.isEmpty(groupName)) {
-                if (noNameGroup == null) {
-                    noNameGroup = new HashMap<>();
+                if (anonymousGroup == null) {
+                    anonymousGroup = new HashMap<>();
                 }
-                noNameGroup.putAll(routes);
-                return noNameGroup;
+                anonymousGroup.putAll(routes);
+                return anonymousGroup;
             } else {
                 HashMap<String, EndPointMeta> group = groups.get(groupName);
                 if (group == null) {
@@ -115,16 +122,18 @@ class VRouterInternal {
         return null;
     }
 
-    private static EndPointMeta getEndPointMetaByGroupNameAndPath(String groupName, String path) {
-        boolean noName = TextUtils.isEmpty(groupName);
-        String groupClassName = noName ? noNameGroupClassName : groupClassNameMap.get(groupName);
-        if (TextUtils.isEmpty(groupClassName)) {
+    private static EndPointMeta getEndPointMetaByGroupNameAndRoute(String groupName, String route) {
+        boolean anonymous = TextUtils.isEmpty(groupName);
+        ArrayList<String> groupClassNameList = anonymous ? anonymousGroupClassNames : groupClassNamesMap.get(groupName);
+        if (groupClassNameList == null || groupClassNameList.isEmpty()) {
             return null;
         }
 
-        HashMap<String, EndPointMeta> group = noName ? noNameGroup : groups.get(groupName);
+        HashMap<String, EndPointMeta> group = anonymous ? anonymousGroup : groups.get(groupName);
         if (group == null) {// 若该分组尚未加载，则调用 loadGroup() 加载
-            group = loadGroup(groupClassName, groupName);
+            for (String groupClassName : groupClassNameList) {
+                group = loadGroup(groupClassName, groupName);
+            }
         }
 
         if (group == null) {
@@ -132,18 +141,18 @@ class VRouterInternal {
             return null;
         }
 
-        return group.get(path);
+        return group.get(route);
     }
 
     private static boolean go(@NonNull Context context, EndPointMeta endPointMeta,
                               @NonNull Postcard postcard) {
 
-        String path = postcard.getPath();
-        Log.d(TAG, "go, path: " + path);
+        String route = postcard.getRoute();
+        Log.d(TAG, "go, route: " + route);
 
         Class<?> endpointClass = endPointMeta.getEndPointClass();
         if (endpointClass == null) {
-            Log.e(TAG, "CLASS NOT FOUND with path " + path + "!!!");
+            Log.e(TAG, "CLASS NOT FOUND with route " + route + "!!!");
             return false;
         }
 

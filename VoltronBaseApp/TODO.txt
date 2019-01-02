@@ -1,6 +1,6 @@
 Voltron TODO list:
-1. 支持参数
-2. 更友好的调用方式
+[DONE] 1. 支持参数
+[DONE] 2. 更友好的调用方式
 3. 支持分类：
     1）Activity
     2）Fragment

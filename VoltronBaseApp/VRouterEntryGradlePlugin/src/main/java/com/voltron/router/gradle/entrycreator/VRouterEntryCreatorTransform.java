@@ -125,7 +125,7 @@ public class VRouterEntryCreatorTransform extends Transform {
                 String className = trimName(name, 0).replace('/', '.');
                 initClasses.add(className);
 
-                Logger.i("    find generated class: " + className);
+                Logger.i("     in jar, found generated class: " + className);
             }
         }
     }
@@ -144,7 +144,7 @@ public class VRouterEntryCreatorTransform extends Transform {
                         .replace(File.separatorChar, '.');
                 initClasses.add(className);
 
-                Logger.i("    find generated class: " + className);
+                Logger.i("    found generated class: " + className);
             }
         }
     }
