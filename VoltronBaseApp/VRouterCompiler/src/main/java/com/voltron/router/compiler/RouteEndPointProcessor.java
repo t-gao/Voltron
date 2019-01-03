@@ -7,6 +7,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.voltron.router.EndPointType;
 import com.voltron.router.annotation.EndPoint;
 import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
@@ -33,6 +34,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 
 @AutoService(Processor.class)
@@ -42,16 +46,22 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
     private Logger logger;
     private Filer filer;
+    private Elements elementUtils;
+    private Types typeUtils;
 
     // 分组信息
     private HashMap<String, Set<EndPointMeta>> groups = new HashMap<>();
     // group name 为空的分组
     private Set<EndPointMeta> noNameGroup = new HashSet<>();
 
+    private TypeMirror typeActivity, typeFragment, typeFragmentV4, typeService, typeParcelable;
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
         super.init(processingEnvironment);
         filer = processingEnvironment.getFiler();
+        elementUtils = processingEnvironment.getElementUtils();
+        typeUtils = processingEnvironment.getTypeUtils();
         logger = new Logger(processingEnvironment.getMessager());
 
         logger.i("RouteEndPointProcessor init");
@@ -71,6 +81,12 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             logger.e(Constants.MODULE_NAME_NOT_CONFIGED_ERR_MSG);
             throw new RuntimeException(Constants.LOG_PREFIX + Constants.MODULE_NAME_NOT_CONFIGED_ERR_MSG);
         }
+
+        typeActivity = elementUtils.getTypeElement(Constants.TypeName.ACTIVITY).asType();
+        typeFragment = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT).asType();
+        typeFragmentV4 = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
+        typeService = elementUtils.getTypeElement(Constants.TypeName.SERVICE).asType();
+        typeParcelable = elementUtils.getTypeElement(Constants.TypeName.PARCELABLE).asType();
     }
 
     @Override
@@ -119,9 +135,28 @@ public class RouteEndPointProcessor extends AbstractProcessor {
         return true;
     }
 
+    private EndPointType getEndPointType(Element element) {
+        TypeMirror typeMirror = element.asType();
+        if (typeUtils.isSubtype(typeMirror, typeActivity)) {
+            return EndPointType.ACTIVITY;
+        } else if (typeUtils.isSubtype(typeMirror, typeService)) {
+            return EndPointType.SERVICE;
+        } else if (typeUtils.isSubtype(typeMirror, typeFragmentV4)) {
+            return EndPointType.FRAGMENT_V4;
+        } else if (typeUtils.isSubtype(typeMirror, typeFragment)) {
+            return EndPointType.FRAGMENT;
+        } else if (typeUtils.isSubtype(typeMirror, typeParcelable)) {
+            return EndPointType.PARCELABLE;
+        } else {
+            return EndPointType.OTHER;
+        }
+    }
+
     private void processElement(Element element) {
         if (element.getKind() == ElementKind.CLASS) {
-            EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation2(element.getAnnotation(EndPoint.class), element);
+            EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation(
+                    element.getAnnotation(EndPoint.class), element, getEndPointType(element));
+
             if (endPointMeta == null) {
                 return;
             }
@@ -206,9 +241,9 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             ClassName className = ClassName.get((TypeElement) endPointMeta.getElement());
             String path = endPointMeta.getPath();
             String route = endPointMeta.getRoute();
-            initMethod.addStatement("routes.put($S, $T.build($S, $S, $S, $S, $S, $S, $T.class))",
+            initMethod.addStatement("routes.put($S, $T.build($S, $S, $S, $S, $S, $S, $T.class, $T." + endPointMeta.getEndPointType() + "))",
                     route, EndPointMeta.class, groupName, endPointMeta.getScheme(), endPointMeta.getHost(),
-                    path, endPointMeta.getValue(), route, className);
+                    path, endPointMeta.getValue(), route, className, ClassName.get(EndPointType.class));
         }
 
         String pkgName = Constants.GENERATED_PACKAGE;

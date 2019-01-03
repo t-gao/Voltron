@@ -1,12 +1,14 @@
 package com.voltron.router.base;
 
+import com.voltron.router.EndPointType;
 import com.voltron.router.annotation.EndPoint;
 
 import javax.lang.model.element.Element;
 
 public class AnnotationUtil {
 
-    public static EndPointMeta buildEndPointMetaFromAnnotation2(EndPoint endPointAnno, Element element) {
+    public static EndPointMeta buildEndPointMetaFromAnnotation(EndPoint endPointAnno, Element element,
+                                                               EndPointType endPointType) {
         if (endPointAnno == null) {
             return null;
         }
@@ -31,7 +33,7 @@ public class AnnotationUtil {
             return null;
         }
 
-        return new EndPointMeta(groupName, scheme, host, path, value, route, element);
+        return new EndPointMeta(groupName, scheme, host, path, value, route, element, endPointType);
     }
 
     public static String extractGroupNameFromSchemeHost(String scheme, String host) {

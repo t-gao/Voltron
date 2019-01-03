@@ -1,5 +1,7 @@
 package com.voltron.router.base;
 
+import com.voltron.router.EndPointType;
+
 import javax.lang.model.element.Element;
 
 public class EndPointMeta {
@@ -25,8 +27,13 @@ public class EndPointMeta {
      */
     private String value;
 
+    /**
+     * 目标类类型
+     */
+    private EndPointType endPointType;
+
     private EndPointMeta(String group, String scheme, String host, String path, String value,
-                 String route, Class endPointClass) {
+                         String route, Class endPointClass, EndPointType endPointType) {
         this.group = group;
         this.scheme = scheme;
         this.host = host;
@@ -34,10 +41,11 @@ public class EndPointMeta {
         this.value = value;
         this.route = route;
         this.endPointClass = endPointClass;
+        this.endPointType = endPointType;
     }
 
     public EndPointMeta(String group, String scheme, String host, String path, String value,
-                        String route, Element element) {
+                        String route, Element element, EndPointType endPointType) {
         this.group = group;
         this.scheme = scheme;
         this.host = host;
@@ -45,6 +53,7 @@ public class EndPointMeta {
         this.value = value;
         this.route = route;
         this.element = element;
+        this.endPointType = endPointType;
     }
 
     public Element getElement() {
@@ -79,8 +88,12 @@ public class EndPointMeta {
         return endPointClass;
     }
 
+    public EndPointType getEndPointType() {
+        return endPointType;
+    }
+
     public static EndPointMeta build(String group, String scheme, String host, String path, String value,
-                                     String route, Class endPointClass) {
-        return new EndPointMeta(group, scheme, host, path, value, route, endPointClass);
+                                     String route, Class endPointClass, EndPointType endPointType) {
+        return new EndPointMeta(group, scheme, host, path, value, route, endPointClass, endPointType);
     }
 }
