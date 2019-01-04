@@ -71,6 +71,21 @@ class VRouterInternal {
         }
     }
 
+    static void inject(Object clz){
+        try {
+            String className = clz.getClass().getName();
+            Class classAutowired = Class.forName(className+"__Autowired");
+            if (classAutowired != null){
+                Method method = classAutowired.getMethod("inject" , Object.class);
+                if (method != null){
+                    method.invoke(null, clz);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
     static boolean go(@Nullable Postcard postcard) {
         if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
             return false;
