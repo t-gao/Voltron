@@ -34,11 +34,6 @@ public interface Constants {
      String SERIALIZABLE = "java.io.Serializable";
      String PARCELABLE = "android.os.Parcelable";
 
-    // System interface
-    String ACTIVITY = "android.app.Activity";
-    String FRAGMENT = "android.app.Fragment";
-    String FRAGMENT_V4 = "android.support.v4.app.Fragment";
-
     // methodName
     String METHOD_INJECT = "inject" ;
     String NAME_OF_AUTOWIRED = "__Autowired" ;
