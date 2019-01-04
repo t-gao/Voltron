@@ -16,4 +16,12 @@ public class VRouter {
     public static Postcard.Builder with(Context context) {
         return new Postcard.Builder(context);
     }
+
+    /**
+     * In general , clz is Activity or Fragment
+     * @param clz
+     */
+    public static void inject(Object clz){
+        VRouterInternal.inject(clz);
+    }
 }

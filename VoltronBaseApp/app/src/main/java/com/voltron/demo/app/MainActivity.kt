@@ -2,9 +2,11 @@ package com.voltron.demo.app
 
 import android.app.Activity
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
+import com.voltron.demo.app.inject.TestParcelable
+import com.voltron.demo.app.inject.TestSerializable
 import com.voltron.router.api.VRouter
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -25,6 +27,8 @@ class MainActivity : AppCompatActivity() {
         btn_go_within_module.setOnClickListener {
             VRouter.with(this)
                     .path("/main/second")
+                    .serializableExtra("test", TestSerializable("Tom" , 100) )
+                    .parcelableExtra("testParcelable", TestParcelable("Jerry" , 101))
                     .go()
         }
 
