@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.voltron.router.EndPointType;
 import com.voltron.router.base.EndPointMeta;
 
 import java.lang.reflect.InvocationTargetException;
@@ -171,6 +172,19 @@ class VRouterInternal {
             return false;
         }
 
+        EndPointType endPointType = endPointMeta.getEndPointType();
+        Log.d(TAG, "endPointType: " + endPointType.toString());
+        switch (endPointType) {
+            case ACTIVITY:
+                return startActivity(context, endPointMeta, postcard, endpointClass);
+            default:
+                return false;
+        }
+
+    }
+
+    private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
+                                  @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();
@@ -204,7 +218,5 @@ class VRouterInternal {
             Log.e(TAG, "START ACTIVITY ERR ", e);
             return false;
         }
-
     }
-
 }
