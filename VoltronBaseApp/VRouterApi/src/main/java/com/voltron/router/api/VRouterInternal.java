@@ -77,7 +77,7 @@ class VRouterInternal {
         try {
             if (obj != null) {
                 String className = obj.getClass().getName();
-                Class classAutowired = Class.forName(className+"__Autowired");
+                Class classAutowired = Class.forName(className + "__Autowired");
                 if (classAutowired != null) {
                     Method method = classAutowired.getMethod("inject" , Object.class);
                     if (method != null) {
