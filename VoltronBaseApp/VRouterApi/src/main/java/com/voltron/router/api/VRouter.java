@@ -34,9 +34,20 @@ public class VRouter {
 
     /**
      * In general , clz is Activity or Fragment
+     *
      * @param clz
      */
-    public static void inject(Object clz){
+    public static void inject(Object clz) {
         VRouterInternal.inject(clz);
+    }
+
+    /**
+     * register scheme Handler
+     *
+     * @param scheme  eg: http/https/myscheme
+     * @param handler the handler to handle the route to dispatch
+     */
+    public static void registerSchemeHandler(String scheme, IRouteSchemeHandler handler) {
+        VRouterInternal.registerSchemeHandler(scheme, handler);
     }
 }

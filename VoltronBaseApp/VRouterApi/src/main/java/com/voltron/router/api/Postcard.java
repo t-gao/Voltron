@@ -8,12 +8,10 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 
-import com.voltron.router.api.utils.UrlUtil;
 import com.voltron.router.base.AnnotationUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class Postcard {
     Context context;
@@ -162,32 +160,6 @@ public class Postcard {
          */
         public Builder route(String route) {
             P.route = route;
-            return this;
-        }
-
-        /**
-         * 用于deeplink内部跳转：eg：hfqdl://m.haofenqi.com/modulea/demoa
-         */
-        public Builder deepLink(String route) {
-            if (!TextUtils.isEmpty(route)) {
-                P.path = "/main/dispatch";
-                Bundle data = new Bundle();
-                if (route.startsWith("http")) {
-                    data.putString("deeplink", route);
-                } else {
-                    if (UrlUtil.checkIsLegalDeepLinkPath(route)) {
-                        //解析需要跳转的参数
-                        HashMap<String, String> paramMap = UrlUtil.URLRequest(route);
-                        data.putString("deeplink", UrlUtil.getRouterPath(route));
-                        if (paramMap.size() > 0) {
-                            data.putSerializable("params", paramMap);
-                        }
-                    } else {
-                        data.putString("deeplink", "");
-                    }
-                }
-                P.extras = data;
-            }
             return this;
         }
 
@@ -351,6 +323,11 @@ public class Postcard {
          */
         public Builder bundleExtra(String key, Bundle value) {
             P.myExtras().putBundle(key, value);
+            return this;
+        }
+        // 直接设置bundle数据
+        public Builder resetExtra(Bundle value) {
+            P.extras = value;
             return this;
         }
 

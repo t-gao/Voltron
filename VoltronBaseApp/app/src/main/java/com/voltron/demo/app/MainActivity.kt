@@ -7,8 +7,11 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.voltron.demo.app.inject.TestParcelable
 import com.voltron.demo.app.inject.TestSerializable
+import com.voltron.demo.app.utils.UrlUtil
+import com.voltron.router.api.IRouteSchemeHandler
 import com.voltron.router.api.VRouter
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,13 +67,41 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this@MainActivity, FragContainerActivity::class.java))
         }
         btn_deeplink_go_activity.setOnClickListener {
+            VRouter.registerSchemeHandler("testscheme", object : IRouteSchemeHandler {
+                override fun handle(route: String?) {
+                    route?.apply {
+                        val builder = VRouter.with(this@MainActivity)
+                                .route("/main/dispatch")
+                        val data = Bundle()
+                        if (UrlUtil.checkIsLegalDeepLinkPath(route)) {
+                            //解析需要跳转的参数
+                            data.putString("deeplink", UrlUtil.getRouterPath(route))
+                            UrlUtil.URLRequest(route)?.let {
+                                data.putSerializable("params", it)
+                            }
+                        } else {
+                            data.putString("deeplink", "")
+                        }
+                        builder.resetExtra(data)
+                        builder.go()
+                    }
+                }
+            })
             VRouter.with(this)
-                    .deepLink("testscheme://m.schemetest.com/modulea/demoa")
+                    .route("testscheme://m.haofenqi.com/modulea/demoa?EXT_HH=json")
                     .go()
         }
         btn_deeplink_go_webview.setOnClickListener {
-            VRouter.with(this)
-                    .deepLink("https://www.baidu.com")
+            VRouter.registerSchemeHandler("https") { route ->
+                route?.apply {
+                    VRouter.with(this@MainActivity)
+                            .route("/main/webview")
+                            .stringExtra("url", route)
+                            .go()
+                }
+            }
+            VRouter.with(this@MainActivity)
+                    .route("https://www.baidu.com")
                     .go()
         }
         btn_navurl.setOnClickListener {

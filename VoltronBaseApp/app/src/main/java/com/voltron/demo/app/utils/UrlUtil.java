@@ -1,4 +1,4 @@
-package com.voltron.router.api.utils;
+package com.voltron.demo.app.utils;
 
 import android.net.Uri;
 import android.text.TextUtils;
