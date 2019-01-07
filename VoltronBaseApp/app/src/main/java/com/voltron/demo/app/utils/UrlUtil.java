@@ -12,7 +12,7 @@ public class UrlUtil {
     }
 
     /**
-     * 检查是否是有效的url，eg：hfqdl://m.haofenqi.com/modulea/demoa
+     * 检查是否是有效的url，eg：myscheme://m.test.com/modulea/demoa
      * 如果不包含后面的path，则无法实现跳转
      */
     public static boolean checkIsLegalDeepLinkPath(String route) {

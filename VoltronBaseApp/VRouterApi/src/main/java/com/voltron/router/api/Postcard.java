@@ -326,7 +326,7 @@ public class Postcard {
             return this;
         }
         // 直接设置bundle数据
-        public Builder resetExtra(Bundle value) {
+        public Builder setExtra(Bundle value) {
             P.extras = value;
             return this;
         }

@@ -23,8 +23,8 @@
             <!-- Scheme -->
             <intent-filter>
                 <data
-                    android:host="m.haofenqi.com"
-                    android:scheme="hfqdl" />
+                    android:host="m.test.com"
+                    android:scheme="myscheme" />
 
                 <action android:name="android.intent.action.VIEW" />
 

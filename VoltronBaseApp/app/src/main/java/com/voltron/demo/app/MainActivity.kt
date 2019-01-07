@@ -82,13 +82,13 @@ class MainActivity : AppCompatActivity() {
                         } else {
                             data.putString("deeplink", "")
                         }
-                        builder.resetExtra(data)
+                        builder.setExtra(data)
                         builder.go()
                     }
                 }
             })
             VRouter.with(this)
-                    .route("testscheme://m.haofenqi.com/modulea/demoa?EXT_HH=json")
+                    .route("testscheme://m.test.com/modulea/demoa?EXT_HH=json")
                     .go()
         }
         btn_deeplink_go_webview.setOnClickListener {

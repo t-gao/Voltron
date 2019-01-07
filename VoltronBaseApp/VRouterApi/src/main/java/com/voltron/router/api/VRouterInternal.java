@@ -12,6 +12,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.voltron.router.EndPointType;
+import com.voltron.router.base.AnnotationConsts;
 import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
@@ -269,7 +270,7 @@ class VRouterInternal {
     // 只截取://（testscheme://）之前的Scheme
     private static String getDeepLinkScheme(String route) {
         int endIndex = -1;
-        if (TextUtils.isEmpty(route) || (endIndex = route.indexOf("://")) == -1) {
+        if (TextUtils.isEmpty(route) || (endIndex = route.indexOf(AnnotationConsts.SCHEME_SUFFIX)) == -1) {
             return "";
         }
         return route.substring(0, endIndex);
