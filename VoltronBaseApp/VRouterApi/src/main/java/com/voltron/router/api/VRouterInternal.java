@@ -118,11 +118,8 @@ class VRouterInternal {
         String scheme = getDeepLinkScheme(route);
         if (!TextUtils.isEmpty(scheme)) {
             IRouteSchemeHandler schemeHandler = getSchemeHandler(scheme);
-            if (schemeHandler == null) {
-                return false;
-            } else {
+            if (schemeHandler != null) {
                 schemeHandler.handle(route);
-                return true;
             }
         }
         String groupName = postcard.getGroup();
