@@ -7,8 +7,11 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.voltron.demo.app.inject.TestParcelable
 import com.voltron.demo.app.inject.TestSerializable
+import com.voltron.demo.app.utils.UrlUtil
+import com.voltron.router.api.IRouteSchemeHandler
 import com.voltron.router.api.VRouter
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,8 +30,8 @@ class MainActivity : AppCompatActivity() {
         btn_go_within_module.setOnClickListener {
             VRouter.with(this)
                     .path("/main/second")
-                    .serializableExtra("test", TestSerializable("Tom" , 100) )
-                    .parcelableExtra("testParcelable", TestParcelable("Jerry" , 101))
+                    .serializableExtra("test", TestSerializable("Tom", 100))
+                    .parcelableExtra("testParcelable", TestParcelable("Jerry", 101))
                     .go()
         }
 
@@ -62,6 +65,50 @@ class MainActivity : AppCompatActivity() {
 
         btn_go_to_frag_container.setOnClickListener {
             startActivity(Intent(this@MainActivity, FragContainerActivity::class.java))
+        }
+        btn_deeplink_go_activity.setOnClickListener {
+            VRouter.registerSchemeHandler("testscheme", object : IRouteSchemeHandler {
+                override fun handle(route: String?) {
+                    route?.apply {
+                        val builder = VRouter.with(this@MainActivity)
+                                .route("/main/dispatch")
+                        val data = Bundle()
+                        if (UrlUtil.checkIsLegalDeepLinkPath(route)) {
+                            //解析需要跳转的参数
+                            data.putString("deeplink", UrlUtil.getRouterPath(route))
+                            UrlUtil.URLRequest(route)?.let {
+                                data.putSerializable("params", it)
+                            }
+                        } else {
+                            data.putString("deeplink", "")
+                        }
+                        builder.setExtra(data)
+                        builder.go()
+                    }
+                }
+            })
+            VRouter.with(this)
+                    .route("testscheme://m.test.com/modulea/demoa?EXT_HH=json")
+                    .go()
+        }
+        btn_deeplink_go_webview.setOnClickListener {
+            VRouter.registerSchemeHandler("https") { route ->
+                route?.apply {
+                    VRouter.with(this@MainActivity)
+                            .route("/main/webview")
+                            .stringExtra("url", route)
+                            .go()
+                }
+            }
+            VRouter.with(this@MainActivity)
+                    .route("https://www.baidu.com")
+                    .go()
+        }
+        btn_navurl.setOnClickListener {
+            VRouter.with(this)
+                    .route("/main/webview")
+                    .stringExtra("url", "file:///android_asset/scheme-test.html")
+                    .go()
         }
     }
 

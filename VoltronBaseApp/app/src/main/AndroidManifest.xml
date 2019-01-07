@@ -19,6 +19,34 @@
         </activity>
         <activity android:name=".SecondActivity" />
         <activity android:name=".FragContainerActivity"></activity>
+        <activity android:name=".SchemeFilterActivity">
+            <!-- Scheme -->
+            <intent-filter>
+                <data
+                    android:host="m.test.com"
+                    android:scheme="myscheme" />
+
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+            </intent-filter>
+
+            <!-- App Links -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="www.haohuan.com"
+                    android:scheme="http" />
+                <data
+                    android:host="www.haohuan.com"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

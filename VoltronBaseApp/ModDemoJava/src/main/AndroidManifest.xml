@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.voltron.router.demo.mod_java">
-
+<uses-permission android:name="android.permission.INTERNET"/>
     <application>
         <activity android:name=".DemoAActivity" />
         <activity android:name=".DemoSchemeActivity" />
         <activity android:name=".DemoSchemeHostPathActivity" />
         <activity android:name=".DemoPathOnlyActivity"></activity>
+        <activity android:name=".DemoWebViewActivity"/>
     </application>
 
 </manifest>

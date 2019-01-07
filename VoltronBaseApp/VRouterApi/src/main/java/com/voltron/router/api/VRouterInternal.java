@@ -12,6 +12,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.voltron.router.EndPointType;
+import com.voltron.router.base.AnnotationConsts;
 import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
@@ -31,6 +32,8 @@ class VRouterInternal {
     //  分组名groupName 和 该分组内的路由信息的映射关系
     private static HashMap<String, HashMap<String, EndPointMeta>> groups = new HashMap<>();
     private static HashMap<String, EndPointMeta> anonymousGroup;
+    // 缓存用户自定义的Scheme的处理
+    private static HashMap<String, IRouteSchemeHandler> schemeHandlerHashMap = new HashMap<>();
 
     static void init() {
         Log.d(TAG, "VROUTER GROUP >>>> init");
@@ -111,6 +114,14 @@ class VRouterInternal {
         }
 
         String route = postcard.getRoute();
+        // handle deeplink scheme
+        String scheme = getDeepLinkScheme(route);
+        if (!TextUtils.isEmpty(scheme)) {
+            IRouteSchemeHandler schemeHandler = getSchemeHandler(scheme);
+            if (schemeHandler != null) {
+                schemeHandler.handle(route);
+            }
+        }
         String groupName = postcard.getGroup();
 
         EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
@@ -203,7 +214,7 @@ class VRouterInternal {
     }
 
     private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
-                                  @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
+                                         @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();
@@ -222,9 +233,9 @@ class VRouterInternal {
             } else {
                 if (context instanceof Activity) {
                     if (postcard.isForResult()) {
-                        ((Activity)context).startActivityForResult(intent, postcard.getRequestCode());
+                        ((Activity) context).startActivityForResult(intent, postcard.getRequestCode());
                     } else {
-                        ((Activity)context).startActivity(intent);
+                        ((Activity) context).startActivity(intent);
                     }
                 } else {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -237,5 +248,28 @@ class VRouterInternal {
             Log.e(TAG, "START ACTIVITY ERR ", e);
             return false;
         }
+    }
+
+    static void registerSchemeHandler(String scheme, IRouteSchemeHandler handler) {
+        if (schemeHandlerHashMap == null) {
+            schemeHandlerHashMap = new HashMap<>();
+        }
+        schemeHandlerHashMap.put(scheme, handler);
+    }
+
+    private static IRouteSchemeHandler getSchemeHandler(String scheme) {
+        if (schemeHandlerHashMap == null) {
+            return null;
+        }
+        return schemeHandlerHashMap.get(scheme);
+    }
+
+    // 只截取://（testscheme://）之前的Scheme
+    private static String getDeepLinkScheme(String route) {
+        int endIndex = -1;
+        if (TextUtils.isEmpty(route) || (endIndex = route.indexOf(AnnotationConsts.SCHEME_SUFFIX)) == -1) {
+            return "";
+        }
+        return route.substring(0, endIndex);
     }
 }

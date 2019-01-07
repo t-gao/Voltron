@@ -39,4 +39,14 @@ public class VRouter {
     public static void inject(Object obj){
         VRouterInternal.inject(obj);
     }
+
+    /**
+     * register scheme Handler
+     *
+     * @param scheme  eg: http/https/myscheme
+     * @param handler the handler to handle the route to dispatch
+     */
+    public static void registerSchemeHandler(String scheme, IRouteSchemeHandler handler) {
+        VRouterInternal.registerSchemeHandler(scheme, handler);
+    }
 }
