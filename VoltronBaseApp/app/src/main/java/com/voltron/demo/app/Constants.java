@@ -6,5 +6,6 @@ public interface Constants {
     String SCHEME_HTTP = "http";
     String SCHEME_HTTPS = "https";
     String DEEPLINK = "deeplink";
+    String PARAMS = "params";
     }
 }

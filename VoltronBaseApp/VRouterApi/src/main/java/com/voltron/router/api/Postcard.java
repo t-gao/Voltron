@@ -8,10 +8,12 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 
+import com.voltron.router.api.utils.UrlUtil;
 import com.voltron.router.base.AnnotationUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Postcard {
     Context context;
@@ -106,6 +108,7 @@ public class Postcard {
 
     /**
      * 跳转到指定页面
+     *
      * @return 跳转结果
      */
     boolean go() {
@@ -122,7 +125,7 @@ public class Postcard {
 
         /**
          * 设置以指定的 Fragment 来 startActivity。
-         *
+         * <p>
          * NOTE:
          * 若调用了该方法，且参数不为 null，则会使用 {@link Fragment#startActivity(Intent)}
          * 或 {@link Fragment#startActivityForResult(Intent, int)}，
@@ -153,11 +156,38 @@ public class Postcard {
 
         /**
          * 直接指定完整的路由路径，其中包含 scheme、host、path，会覆盖三者相应单独指定的值。
+         *
          * @param route 路由路径
          * @return this
          */
         public Builder route(String route) {
             P.route = route;
+            return this;
+        }
+
+        /**
+         * 用于deeplink内部跳转：eg：hfqdl://m.haofenqi.com/modulea/demoa
+         */
+        public Builder deepLink(String route) {
+            if (!TextUtils.isEmpty(route)) {
+                P.path = "/main/dispatch";
+                Bundle data = new Bundle();
+                if (route.startsWith("http")) {
+                    data.putString("deeplink", route);
+                } else {
+                    if (UrlUtil.checkIsLegalDeepLinkPath(route)) {
+                        //解析需要跳转的参数
+                        HashMap<String, String> paramMap = UrlUtil.URLRequest(route);
+                        data.putString("deeplink", UrlUtil.getRouterPath(route));
+                        if (paramMap.size() > 0) {
+                            data.putSerializable("params", paramMap);
+                        }
+                    } else {
+                        data.putString("deeplink", "");
+                    }
+                }
+                P.extras = data;
+            }
             return this;
         }
 
@@ -315,7 +345,7 @@ public class Postcard {
         /**
          * 会调用 {@link Bundle#putBundle(String, Bundle)}
          *
-         * @param key key
+         * @param key   key
          * @param value value
          * @return this
          */
@@ -330,5 +360,4 @@ public class Postcard {
             return P.go();
         }
     }
-
 }

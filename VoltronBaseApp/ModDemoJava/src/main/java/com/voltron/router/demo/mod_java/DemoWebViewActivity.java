@@ -31,7 +31,7 @@ public class DemoWebViewActivity extends AppCompatActivity {
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.getSettings().setSupportZoom(true);
         mWebView.getSettings().setBuiltInZoomControls(true);
-        mWebView.getSettings().setDomStorageEnabled(true);//支持活动盒子
+        mWebView.getSettings().setDomStorageEnabled(true);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             mWebView.getSettings().setMediaPlaybackRequiresUserGesture(false);
         }

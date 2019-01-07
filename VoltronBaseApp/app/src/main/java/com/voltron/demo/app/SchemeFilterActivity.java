@@ -7,36 +7,53 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 
 import com.voltron.router.annotation.EndPoint;
+import com.voltron.router.api.Postcard;
 import com.voltron.router.api.VRouter;
 
-@EndPoint(scheme = "hfqdl", host = "m.haofenqi.com")
+import java.util.Map;
+import java.util.Set;
+
+@EndPoint("/main/dispatch")
 public class SchemeFilterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Uri uri = getIntent().getData();
-        String deepLink = getIntent().getStringExtra(Constants.DeepLinks.DEEPLINK);
         if (uri == null) {
-            if (TextUtils.isEmpty(deepLink)) {
+            // 内部跳转
+            Bundle extrasData = getIntent().getExtras();
+            String deepLink = "";
+            if (extrasData == null || TextUtils.isEmpty(deepLink = extrasData.getString(Constants.DeepLinks.DEEPLINK))) {
                 finish();
+                return;
             }
-            processInternalDispatch(deepLink);
+            Map<String, String> params = (Map<String, String>) extrasData.getSerializable(Constants.DeepLinks.PARAMS);
+            processInternalDispatch(deepLink, params);
         } else {
             processOutterDispatch(uri);
         }
     }
 
     // 处理内部DEEPLINK跳转
-    private void processInternalDispatch(String deepLink) {
+    private void processInternalDispatch(String deepLink, Map<String, String> params) {
         if (deepLink.startsWith("http")) {
             VRouter.with(this)
                     .path("/main/webview")
                     .stringExtra("url", deepLink)
                     .go();
         } else {
-            VRouter.with(this)
-                    .path(deepLink)
-                    .go();
+            if (params == null || params.size() == 0) {
+                VRouter.with(this)
+                        .path(deepLink).go();
+            } else {
+                Postcard.Builder builder = VRouter.with(this)
+                        .path(deepLink);
+                // 将携带过来的参数带入
+                for (Map.Entry<String, String> entry : params.entrySet()) {
+                    builder.stringExtra(entry.getKey(), entry.getValue());
+                }
+                builder.go();
+            }
         }
         finish();
     }
@@ -48,18 +65,26 @@ public class SchemeFilterActivity extends AppCompatActivity {
             return;
         }
         switch (scheme) {
-            case Constants.DeepLinks.SCHEME_HFQDL:
-                String path = uri.getPath();
-                VRouter.with(this)
-                        .path(path)
-                        .go();
-                break;
             case Constants.DeepLinks.SCHEME_HTTP:
             case Constants.DeepLinks.SCHEME_HTTPS:
                 VRouter.with(this)
                         .path("/main/webview")
                         .stringExtra("url", uri.toString())
                         .go();
+                break;
+            default:
+                String path = uri.getPath();
+                Set<String> queryNames = uri.getQueryParameterNames();
+                Postcard.Builder builder = VRouter.with(this)
+                        .path(path);
+                if (queryNames == null || queryNames.size() == 0) {
+                    builder.go();
+                } else {
+                    for (String name : queryNames) {
+                        builder.stringExtra(name, uri.getQueryParameter(name));
+                    }
+                    builder.go();
+                }
                 break;
         }
         finish();

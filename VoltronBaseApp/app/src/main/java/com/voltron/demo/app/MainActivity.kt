@@ -65,14 +65,12 @@ class MainActivity : AppCompatActivity() {
         }
         btn_deeplink_go_activity.setOnClickListener {
             VRouter.with(this)
-                    .route("hfqdl://m.haofenqi.com")
-                    .stringExtra(Constants.DeepLinks.DEEPLINK, "/modulea/demoa")
+                    .deepLink("testscheme://m.schemetest.com/modulea/demoa")
                     .go()
         }
         btn_deeplink_go_webview.setOnClickListener {
             VRouter.with(this)
-                    .route("hfqdl://m.haofenqi.com")
-                    .stringExtra(Constants.DeepLinks.DEEPLINK, "https://www.baidu.com")
+                    .deepLink("https://www.baidu.com")
                     .go()
         }
         btn_navurl.setOnClickListener {
