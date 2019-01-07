@@ -95,9 +95,9 @@ public class AutowiredProcessor extends AbstractProcessor {
      * @throws IOException
      */
     private void processElements() throws IllegalAccessException, IOException {
-        TypeMirror activityTm = elements.getTypeElement(ACTIVITY).asType();
-        TypeMirror fragmentTm = elements.getTypeElement(FRAGMENT).asType();
-        TypeMirror fragmentTmV4 = elements.getTypeElement(FRAGMENT_V4).asType();
+        TypeMirror activityTm = elements.getTypeElement(Constants.TypeName.ACTIVITY).asType();
+        TypeMirror fragmentTm = elements.getTypeElement(Constants.TypeName.FRAGMENT).asType();
+        TypeMirror fragmentTmV4 = elements.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
         //构造生成的方法的参数，Object target （实际上是Activity或者Fragment）
         ParameterSpec objectParamSpec = ParameterSpec.builder(TypeName.OBJECT, "target").build();
 

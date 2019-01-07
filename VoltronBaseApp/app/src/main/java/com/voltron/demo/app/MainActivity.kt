@@ -59,6 +59,10 @@ class MainActivity : AppCompatActivity() {
                     .path("/pathonly")
                     .go()
         }
+
+        btn_go_to_frag_container.setOnClickListener {
+            startActivity(Intent(this@MainActivity, FragContainerActivity::class.java))
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

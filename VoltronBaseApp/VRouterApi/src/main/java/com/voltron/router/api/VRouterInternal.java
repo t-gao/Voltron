@@ -9,8 +9,10 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 
 import com.voltron.router.EndPointType;
+import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
 import java.lang.reflect.InvocationTargetException;
@@ -73,19 +75,34 @@ class VRouterInternal {
 
     static void inject(Object obj) {
         try {
-            if (obj != null){
+            if (obj != null) {
                 String className = obj.getClass().getName();
                 Class classAutowired = Class.forName(className+"__Autowired");
-                if (classAutowired != null){
+                if (classAutowired != null) {
                     Method method = classAutowired.getMethod("inject" , Object.class);
-                    if (method != null){
+                    if (method != null) {
                         method.invoke(null, obj);
                     }
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    static Pair<EndPointType, Class> resolveEndPoint(String route) {
+        if (TextUtils.isEmpty(route)) {
+            return null;
+        }
+
+        String groupName = AnnotationUtil.extractGroupNameFromRoute(route);
+        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
+        if (endPointMeta == null) {
+            Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
+            return null;
+        }
+
+        return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
     }
 
     static boolean go(@Nullable Postcard postcard) {
