@@ -33,10 +33,10 @@ public class VRouter {
     }
 
     /**
-     * In general , clz is Activity or Fragment
-     * @param clz
+     * In general , obj is Activity or Fragment
+     * @param obj
      */
-    public static void inject(Object clz){
-        VRouterInternal.inject(clz);
+    public static void inject(Object obj){
+        VRouterInternal.inject(obj);
     }
 }

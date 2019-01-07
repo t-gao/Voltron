@@ -73,14 +73,16 @@ class VRouterInternal {
         }
     }
 
-    static void inject(Object clz) {
+    static void inject(Object obj) {
         try {
-            String className = clz.getClass().getName();
-            Class classAutowired = Class.forName(className + "__Autowired");
-            if (classAutowired != null) {
-                Method method = classAutowired.getMethod("inject", Object.class);
-                if (method != null) {
-                    method.invoke(null, clz);
+            if (obj != null) {
+                String className = obj.getClass().getName();
+                Class classAutowired = Class.forName(className + "__Autowired");
+                if (classAutowired != null) {
+                    Method method = classAutowired.getMethod("inject" , Object.class);
+                    if (method != null) {
+                        method.invoke(null, obj);
+                    }
                 }
             }
         } catch (Exception e) {
