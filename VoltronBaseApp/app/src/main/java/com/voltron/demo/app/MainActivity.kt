@@ -27,8 +27,8 @@ class MainActivity : AppCompatActivity() {
         btn_go_within_module.setOnClickListener {
             VRouter.with(this)
                     .path("/main/second")
-                    .serializableExtra("test", TestSerializable("Tom" , 100) )
-                    .parcelableExtra("testParcelable", TestParcelable("Jerry" , 101))
+                    .serializableExtra("test", TestSerializable("Tom", 100))
+                    .parcelableExtra("testParcelable", TestParcelable("Jerry", 101))
                     .go()
         }
 
@@ -62,6 +62,24 @@ class MainActivity : AppCompatActivity() {
 
         btn_go_to_frag_container.setOnClickListener {
             startActivity(Intent(this@MainActivity, FragContainerActivity::class.java))
+        }
+        btn_deeplink_go_activity.setOnClickListener {
+            VRouter.with(this)
+                    .route("hfqdl://m.haofenqi.com")
+                    .stringExtra(Constants.DeepLinks.DEEPLINK, "/modulea/demoa")
+                    .go()
+        }
+        btn_deeplink_go_webview.setOnClickListener {
+            VRouter.with(this)
+                    .route("hfqdl://m.haofenqi.com")
+                    .stringExtra(Constants.DeepLinks.DEEPLINK, "https://www.baidu.com")
+                    .go()
+        }
+        btn_navurl.setOnClickListener {
+            VRouter.with(this)
+                    .route("/main/webview")
+                    .stringExtra("url", "file:///android_asset/scheme-test.html")
+                    .go()
         }
     }
 

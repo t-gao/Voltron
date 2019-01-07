@@ -1,67 +1,94 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.voltron.demo.app.MainActivity">
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context="com.voltron.demo.app.MainActivity">
 
-    <Button
-        android:id="@+id/btn_go"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GO"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"/>
+        <Button
+            android:id="@+id/btn_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:text="GO" />
 
-    <Button
-        android:id="@+id/btn_go_within_module"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TEST WITHIN MODULE"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_go_within_module"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="TEST WITHIN MODULE" />
 
-    <Button
-        android:id="@+id/btn_scheme"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TEST SCHEME"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_scheme"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="TEST SCHEME" />
 
-    <Button
-        android:id="@+id/btn_scheme_host_path"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TEST SCHEME HOST PATH"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_scheme_host_path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="TEST SCHEME HOST PATH" />
 
-    <Button
-        android:id="@+id/btn_go_to_kotlin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TEST GO TO KOTLIN"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_go_to_kotlin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="TEST GO TO KOTLIN" />
 
-    <Button
-        android:id="@+id/btn_test_path_only"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TEST PATH ONLY"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_test_path_only"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="TEST PATH ONLY" />
 
-    <Button
-        android:id="@+id/btn_go_to_frag_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="GO TO FRAG CONTAINER"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"/>
+        <Button
+            android:id="@+id/btn_go_to_frag_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:text="GO TO FRAG CONTAINER" />
 
 
-</LinearLayout>
+        <Button
+            android:id="@+id/btn_deeplink_go_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="GO TO ACTIVITY BY DEEPLINK"
+            android:layout_marginTop="10dp" />
+
+        <Button
+            android:id="@+id/btn_deeplink_go_webview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GO TO WEBVIEW BY DEEPLINK"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp" />
+        <Button
+            android:id="@+id/btn_navurl"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GO TO WEB"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp" />
+
+    </LinearLayout>
+</ScrollView>
