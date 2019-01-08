@@ -36,7 +36,7 @@ public class VRouter {
      * In general , obj is Activity or Fragment
      * @param obj
      */
-    public static void inject(Object obj){
+    public static void inject(Object obj) {
         VRouterInternal.inject(obj);
     }
 }

@@ -3,6 +3,8 @@ package com.voltron.router.base;
 import com.voltron.router.EndPointType;
 import com.voltron.router.annotation.EndPoint;
 
+import java.lang.reflect.Method;
+
 import javax.lang.model.element.Element;
 
 public class AnnotationUtil {
@@ -94,5 +96,22 @@ public class AnnotationUtil {
         }
 
         return StringUtils.isEmpty(scheme) ? (host + path) : (scheme + AnnotationConsts.SCHEME_SUFFIX + host + path);
+    }
+
+    public static void injectAutowired(Object obj) {
+        try {
+            if (obj != null) {
+                String className = obj.getClass().getName();
+                Class classAutowired = Class.forName(className + AnnotationConsts.AUTOWIRED_CLASS_SUFFIX);
+                if (classAutowired != null) {
+                    Method method = classAutowired.getMethod(AnnotationConsts.AUTOWIRED_METHOD_INJECT , Object.class);
+                    if (method != null) {
+                        method.invoke(null, obj);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

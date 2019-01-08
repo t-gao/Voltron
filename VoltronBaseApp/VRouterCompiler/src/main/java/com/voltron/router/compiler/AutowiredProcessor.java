@@ -9,6 +9,7 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.voltron.router.annotation.Autowired;
+import com.voltron.router.base.AnnotationConsts;
 import com.voltron.router.base.TypeKind;
 import com.voltron.router.compiler.utils.Logger;
 import com.voltron.router.compiler.utils.TypeUtils;
@@ -38,11 +39,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import static com.voltron.router.compiler.Constants.ACTIVITY;
-import static com.voltron.router.compiler.Constants.FRAGMENT;
-import static com.voltron.router.compiler.Constants.FRAGMENT_V4;
-import static com.voltron.router.compiler.Constants.METHOD_INJECT;
-import static com.voltron.router.compiler.Constants.NAME_OF_AUTOWIRED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
@@ -112,10 +108,10 @@ public class AutowiredProcessor extends AbstractProcessor {
                 String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf("."));
 
                 //生成文件命名规则：类名 + __Autowired
-                String fileName = parent.getSimpleName() + NAME_OF_AUTOWIRED;
+                String fileName = parent.getSimpleName() + AnnotationConsts.AUTOWIRED_CLASS_SUFFIX;
 
                 //创建public static inject(){ } 方法
-                MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder(METHOD_INJECT)
+                MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder(AnnotationConsts.AUTOWIRED_METHOD_INJECT)
                         .addModifiers(PUBLIC , STATIC)
                         .addParameter(objectParamSpec);
 
@@ -163,7 +159,7 @@ public class AutowiredProcessor extends AbstractProcessor {
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.latestSupported() ;
+        return SourceVersion.latestSupported();
     }
 
     @Override

@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
                     .path("/main/second")
                     .serializableExtra("test", TestSerializable("Tom" , 100) )
                     .parcelableExtra("testParcelable", TestParcelable("Jerry" , 101))
+                    .intExtra("testInt", 99)
                     .go()
         }
 
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity() {
                     .scheme("voltron")
                     .host("kotlin.com")
                     .path("/test")
+                    .intExtra("testInt", 99)
                     .go()
         }
 

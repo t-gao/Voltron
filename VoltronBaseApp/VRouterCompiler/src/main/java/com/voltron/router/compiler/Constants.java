@@ -21,20 +21,17 @@ public interface Constants {
     }
 
     // Java type
-     String LANG = "java.lang";
-     String BYTE = LANG + ".Byte";
-     String SHORT = LANG + ".Short";
-     String INTEGER = LANG + ".Integer";
-     String LONG = LANG + ".Long";
-     String FLOAT = LANG + ".Float";
-     String DOUBEL = LANG + ".Double";
-     String BOOLEAN = LANG + ".Boolean";
-     String CHAR = LANG + ".Character";
-     String STRING = LANG + ".String";
-     String SERIALIZABLE = "java.io.Serializable";
-     String PARCELABLE = "android.os.Parcelable";
+    String LANG = "java.lang";
+    String BYTE = LANG + ".Byte";
+    String SHORT = LANG + ".Short";
+    String INTEGER = LANG + ".Integer";
+    String LONG = LANG + ".Long";
+    String FLOAT = LANG + ".Float";
+    String DOUBEL = LANG + ".Double";
+    String BOOLEAN = LANG + ".Boolean";
+    String CHAR = LANG + ".Character";
+    String STRING = LANG + ".String";
+    String SERIALIZABLE = "java.io.Serializable";
+    String PARCELABLE = "android.os.Parcelable";
 
-    // methodName
-    String METHOD_INJECT = "inject" ;
-    String NAME_OF_AUTOWIRED = "__Autowired" ;
 }

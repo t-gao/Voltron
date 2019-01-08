@@ -10,7 +10,7 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
     implementation 'com.android.tools.build:gradle:3.2.1'
-    implementation 'com.squareup:javapoet:1.10.0'
+    implementation 'commons-io:commons-io:2.6'
 }
 
 //publish to local directory
