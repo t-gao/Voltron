@@ -106,6 +106,7 @@ public class Postcard {
 
     /**
      * 跳转到指定页面
+     *
      * @return 跳转结果
      */
     boolean go() {
@@ -122,7 +123,7 @@ public class Postcard {
 
         /**
          * 设置以指定的 Fragment 来 startActivity。
-         *
+         * <p>
          * NOTE:
          * 若调用了该方法，且参数不为 null，则会使用 {@link Fragment#startActivity(Intent)}
          * 或 {@link Fragment#startActivityForResult(Intent, int)}，
@@ -153,6 +154,7 @@ public class Postcard {
 
         /**
          * 直接指定完整的路由路径，其中包含 scheme、host、path，会覆盖三者相应单独指定的值。
+         *
          * @param route 路由路径
          * @return this
          */
@@ -315,12 +317,17 @@ public class Postcard {
         /**
          * 会调用 {@link Bundle#putBundle(String, Bundle)}
          *
-         * @param key key
+         * @param key   key
          * @param value value
          * @return this
          */
         public Builder bundleExtra(String key, Bundle value) {
             P.myExtras().putBundle(key, value);
+            return this;
+        }
+        // 直接设置bundle数据
+        public Builder setExtra(Bundle value) {
+            P.extras = value;
             return this;
         }
 
@@ -330,5 +337,4 @@ public class Postcard {
             return P.go();
         }
     }
-
 }
