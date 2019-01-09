@@ -18,8 +18,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".SecondActivity" />
-        <activity android:name=".FragContainerActivity"></activity>
+        <activity android:name=".FragContainerActivity" />
         <activity android:name=".SchemeFilterActivity">
+
             <!-- Scheme -->
             <intent-filter>
                 <data
@@ -47,6 +48,7 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
+        <activity android:name=".ThirdActivity"></activity>
     </application>
 
 </manifest>

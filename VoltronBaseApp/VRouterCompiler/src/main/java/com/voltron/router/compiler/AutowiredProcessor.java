@@ -34,6 +34,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -45,13 +46,17 @@ import static javax.lang.model.element.Modifier.STATIC;
 @AutoService(Processor.class)
 public class AutowiredProcessor extends AbstractProcessor {
 
+    private String moduleName = null;
+
     // File util, write class file into disk.
     private Filer mFiler;
 
     private Logger logger;
     private Types types;
     private TypeUtils typeUtils;
-    private Elements elements;
+    private Elements elementUtils;
+
+    private Constants.PrivateAutowiredPolicy privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.ABORT;
 
     // Contain field need autowired and his super class.
     private Map<TypeElement, List<Element>> parentAndChild = new HashMap<>();
@@ -61,25 +66,45 @@ public class AutowiredProcessor extends AbstractProcessor {
         super.init(processingEnvironment);
 
         mFiler = processingEnv.getFiler();                  // Generate class.
-        types = processingEnv.getTypeUtils();            // Get type utils.
-        elements = processingEnv.getElementUtils();      // Get class meta.
-        typeUtils = new TypeUtils(types, elements);
-        logger = new Logger(processingEnv.getMessager());   // Package the log utils.
+        types = processingEnv.getTypeUtils();               // Get type utils.
+        elementUtils = processingEnv.getElementUtils();      // Get class meta.
+        typeUtils = new TypeUtils(types, elementUtils);
 
-        logger.i("AutowiredProcessor init. <<<");
+        // 从 build.gradle 里的配置读取 module name
+        Map<String, String> options = processingEnv.getOptions();
+        String privateAutowiredPolicyOption = null;
+        if (MapUtils.isNotEmpty(options)) {
+            moduleName = options.get(Constants.KEY_MODULE_NAME);
+            try {
+                privateAutowiredPolicyOption = options.get(Constants.KEY_PRIVATE_AUTOWIRED_POLICY);
+                privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.valueOf(privateAutowiredPolicyOption);
+            } catch (Exception e) {
+                privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.ABORT;
+            }
+        }
+
+        logger = new Logger(moduleName + "-AutowiredProcessor", processingEnv.getMessager());   // Package the log utils.
+
+        logger.i("init <<<");
+        logger.i("privateAutowiredPolicyOption: " + privateAutowiredPolicyOption);
     }
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        logger.i("AutowiredProcessor start process...");
+        logger.i("start process...");
         if (CollectionUtils.isNotEmpty(set)) {
             try {
-                logger.i("Found autowired field, start... <<<");
-                categories(roundEnvironment.getElementsAnnotatedWith(Autowired.class));
+                Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Autowired.class);
+                categories(elements);
                 processElements();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+                logger.e("process error: " + e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
+//                logger.e("process error: " + e.getMessage());
             }
+        logger.i("process end");
             return true;
         }
         return false;
@@ -91,24 +116,58 @@ public class AutowiredProcessor extends AbstractProcessor {
      * @throws IOException
      */
     private void processElements() throws IllegalAccessException, IOException {
-        TypeMirror activityTm = elements.getTypeElement(Constants.TypeName.ACTIVITY).asType();
-        TypeMirror fragmentTm = elements.getTypeElement(Constants.TypeName.FRAGMENT).asType();
-        TypeMirror fragmentTmV4 = elements.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
+        logger.i("processElements");
+
+        TypeMirror activityTm = elementUtils.getTypeElement(Constants.TypeName.ACTIVITY).asType();
+        TypeMirror fragmentTm = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT).asType();
+        TypeMirror fragmentTmV4 = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
         //构造生成的方法的参数，Object target （实际上是Activity或者Fragment）
         ParameterSpec objectParamSpec = ParameterSpec.builder(TypeName.OBJECT, "target").build();
+
+        printParentAndChild();
 
         if (MapUtils.isNotEmpty(parentAndChild)) {
             logger.i("parentAndChild not empty");
             for (Map.Entry<TypeElement, List<Element>> entry : parentAndChild.entrySet()) {
                 TypeElement parent = entry.getKey();
+
+                TypeMirror parentTm = parent.asType();
+                logger.i("type of parent: " + parentTm.toString());
+                logger.i("type of activityTm: " + activityTm.toString());
+                logger.i("type of fragmentTm: " + fragmentTm.toString());
+                logger.i("type of fragmentTmV4: " + fragmentTmV4.toString());
+
+                boolean isActivity = false;
+                boolean isFragment = false;
+                String statementPrefix = "";
+                if (types.isSubtype(parentTm, activityTm)) {  // Activity, then use getIntent()
+                    isActivity = true;
+                    statementPrefix = "getIntent().";
+                    logger.i("parent is an Activity");
+                } else if (types.isSubtype(parentTm, fragmentTm) || types.isSubtype(parentTm, fragmentTmV4)) {   // Fragment, then use getArguments()
+                    isFragment = true;
+                    statementPrefix = "getArguments().";
+                    logger.i("parent is a Fragment");
+                } else {
+                    logger.i("parent type unknown");
+                    //throw new IllegalAccessException("The field [" + fieldName + "] need autowired from intent, its parent must be activity or fragment!");
+                }
+
+                if (!isActivity && !isFragment) {
+                    continue;
+                }
+
                 List<Element> childs = entry.getValue();
 
                 String qualifiedName = parent.getQualifiedName().toString();
+                logger.i("autowired gen, parent: " + qualifiedName);
                 //生成类文件的包名
                 String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf("."));
+                logger.i("autowired gen, packageName: " + packageName);
 
                 //生成文件命名规则：类名 + __Autowired
                 String fileName = parent.getSimpleName() + AnnotationConsts.AUTOWIRED_CLASS_SUFFIX;
+                logger.i("autowired gen, fileName: " + fileName);
 
                 //创建public static inject(){ } 方法
                 MethodSpec.Builder injectMethodBuilder = MethodSpec.methodBuilder(AnnotationConsts.AUTOWIRED_METHOD_INJECT)
@@ -126,20 +185,28 @@ public class AutowiredProcessor extends AbstractProcessor {
                 for (Element element : childs) {
                     Autowired fieldConfig = element.getAnnotation(Autowired.class);
                     String fieldName = element.getSimpleName().toString();
-                    String originalValue = "substitute." + fieldName;
-                    String statement = "substitute." + fieldName + " = " + buildCastCode(element) + "substitute.";
-                    boolean isActivity = false;
-                    if (types.isSubtype(parent.asType(), activityTm)) {  // Activity, then use getIntent()
-                        isActivity = true;
-                        statement += "getIntent().";
-                    } else if (types.isSubtype(parent.asType(), fragmentTm) || types.isSubtype(parent.asType(), fragmentTmV4)) {   // Fragment, then use getArguments()
-                        statement += "getArguments().";
+                    String extraKeyName = StringUtils.isEmpty(fieldConfig.name()) ? fieldName : fieldConfig.name();
+
+                    boolean isPrivate = element.getModifiers().contains(Modifier.PRIVATE);
+                    if (isPrivate && privateAutowiredPolicy != Constants.PrivateAutowiredPolicy.TRY_SETTER) {
+                        throw new IllegalAccessException(privateAutowiredErrorMessage(fieldName, qualifiedName));
+                    }
+                    String originalValue = "substitute." + (isPrivate ? getGetterOfField(fieldName) : fieldName);
+
+                    // (CastToSomeClass) substitute.
+                    String valueStatement = buildCastCode(element) + "substitute." + statementPrefix;
+                    valueStatement += buildStatement(originalValue, typeUtils.typeExchange(element), isActivity);
+
+                    String statement = null;
+                    if (isPrivate) {
+                        // call the setter of the field
+                        statement = "substitute." + getSetterOfField(fieldName) + "(" + valueStatement + ")";
                     } else {
-                        throw new IllegalAccessException("The field [" + fieldName + "] need autowired from intent, its parent must be activity or fragment!");
+                        // assign value directly
+                        statement = "substitute." + fieldName + " = " + valueStatement;
                     }
 
-                    statement = buildStatement(originalValue, statement, typeUtils.typeExchange(element), isActivity);
-                    injectMethodBuilder.addStatement(statement, StringUtils.isEmpty(fieldConfig.name()) ? fieldName : fieldConfig.name());
+                    injectMethodBuilder.addStatement(statement, extraKeyName);
                     // Validator
                     if (fieldConfig.required() && !element.asType().getKind().isPrimitive()) {  // Primitive wont be check.
                         injectMethodBuilder.beginControlFlow("if (null == substitute." + fieldName + ")");
@@ -157,6 +224,14 @@ public class AutowiredProcessor extends AbstractProcessor {
         }
     }
 
+    private String getSetterOfField(String filed) {
+        return "set" + Character.toUpperCase(filed.charAt(0)) + filed.substring(1);
+    }
+
+    private String getGetterOfField(String filed) {
+        return "get" + Character.toUpperCase(filed.charAt(0)) + filed.substring(1) + "()";
+    }
+
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
@@ -168,7 +243,8 @@ public class AutowiredProcessor extends AbstractProcessor {
     }
 
     private String buildCastCode(Element element) {
-        if (typeUtils.typeExchange(element) == TypeKind.SERIALIZABLE.ordinal()) {
+        int type = typeUtils.typeExchange(element);
+        if (type == TypeKind.SERIALIZABLE.ordinal() || type == TypeKind.PARCELABLE.ordinal()) {
             return CodeBlock.builder().add("($T) ", ClassName.get(element.asType())).build().toString();
         }
         return "";
@@ -177,34 +253,34 @@ public class AutowiredProcessor extends AbstractProcessor {
     /**
      * create the code for file
      * @param originalValue
-     * @param statement
      * @param type
      * @param isActivity
      * @return
      */
-    private String buildStatement(String originalValue, String statement, int type, boolean isActivity) {
+    private String buildStatement(String originalValue, int type, boolean isActivity) {
+        String statement = "";
         if (type == TypeKind.BOOLEAN.ordinal()) {
-            statement += (isActivity ? ("getBooleanExtra($S, " + originalValue + ")") : ("getBoolean($S)"));
+            statement = (isActivity ? ("getBooleanExtra($S, " + originalValue + ")") : ("getBoolean($S)"));
         } else if (type == TypeKind.BYTE.ordinal()) {
-            statement += (isActivity ? ("getByteExtra($S, " + originalValue + ")") : ("getByte($S)"));
+            statement = (isActivity ? ("getByteExtra($S, " + originalValue + ")") : ("getByte($S)"));
         } else if (type == TypeKind.SHORT.ordinal()) {
-            statement += (isActivity ? ("getShortExtra($S, " + originalValue + ")") : ("getShort($S)"));
+            statement = (isActivity ? ("getShortExtra($S, " + originalValue + ")") : ("getShort($S)"));
         } else if (type == TypeKind.INT.ordinal()) {
-            statement += (isActivity ? ("getIntExtra($S, " + originalValue + ")") : ("getInt($S)"));
+            statement = (isActivity ? ("getIntExtra($S, " + originalValue + ")") : ("getInt($S)"));
         } else if (type == TypeKind.LONG.ordinal()) {
-            statement += (isActivity ? ("getLongExtra($S, " + originalValue + ")") : ("getLong($S)"));
+            statement = (isActivity ? ("getLongExtra($S, " + originalValue + ")") : ("getLong($S)"));
         }else if(type == TypeKind.CHAR.ordinal()){
-            statement += (isActivity ? ("getCharExtra($S, " + originalValue + ")") : ("getChar($S)"));
+            statement = (isActivity ? ("getCharExtra($S, " + originalValue + ")") : ("getChar($S)"));
         } else if (type == TypeKind.FLOAT.ordinal()) {
-            statement += (isActivity ? ("getFloatExtra($S, " + originalValue + ")") : ("getFloat($S)"));
+            statement = (isActivity ? ("getFloatExtra($S, " + originalValue + ")") : ("getFloat($S)"));
         } else if (type == TypeKind.DOUBLE.ordinal()) {
-            statement += (isActivity ? ("getDoubleExtra($S, " + originalValue + ")") : ("getDouble($S)"));
+            statement = (isActivity ? ("getDoubleExtra($S, " + originalValue + ")") : ("getDouble($S)"));
         } else if (type == TypeKind.STRING.ordinal()) {
-            statement += (isActivity ? ("getStringExtra($S)") : ("getString($S)"));
+            statement = (isActivity ? ("getStringExtra($S)") : ("getString($S)"));
         } else if (type == TypeKind.SERIALIZABLE.ordinal()) {
-            statement += (isActivity ? ("getSerializableExtra($S)") : ("getSerializable($S)"));
+            statement = (isActivity ? ("getSerializableExtra($S)") : ("getSerializable($S)"));
         } else if (type == TypeKind.PARCELABLE.ordinal()) {
-            statement += (isActivity ? ("getParcelableExtra($S)") : ("getParcelable($S)"));
+            statement = (isActivity ? ("getParcelableExtra($S)") : ("getParcelable($S)"));
         }
 
         return statement;
@@ -217,13 +293,23 @@ public class AutowiredProcessor extends AbstractProcessor {
      * @param elements Field need autowired
      */
     private void categories(Set<? extends Element> elements) throws IllegalAccessException {
+        logger.i("categories start");
+
         if (CollectionUtils.isNotEmpty(elements)) {
+            logger.i("elements not empty");
+
             for (Element element : elements) {
                 TypeElement enclosingElement = (TypeElement) element.getEnclosingElement();
+                Name parentName = enclosingElement.getQualifiedName();
+                Name fieldName = element.getSimpleName();
+                logger.i("element, parent: " + parentName + ", field: " + fieldName);
 
                 if (element.getModifiers().contains(Modifier.PRIVATE)) {
-                    throw new IllegalAccessException("The inject fields CAN NOT BE 'private'!!! please check field ["
-                            + element.getSimpleName() + "] in class [" + enclosingElement.getQualifiedName() + "]");
+                    if (privateAutowiredPolicy == Constants.PrivateAutowiredPolicy.TRY_SETTER) {
+                        logger.w("field " + fieldName + " is private!");
+                    } else {
+                        throw new IllegalAccessException(privateAutowiredErrorMessage(fieldName.toString(), parentName.toString()));
+                    }
                 }
 
                 if (parentAndChild.containsKey(enclosingElement)) { // Has categries
@@ -235,7 +321,25 @@ public class AutowiredProcessor extends AbstractProcessor {
                 }
             }
 
-            logger.i("categories finished.");
+        } else {
+            logger.i("elements empty");
         }
+
+        logger.i("categories finished.");
+    }
+
+    private void printParentAndChild() {
+        logger.i("printParentAndChild");
+        for (Map.Entry<TypeElement, List<Element>> entry : parentAndChild.entrySet()) {
+            logger.i("parent: " + entry.getKey().getQualifiedName());
+            for (Element element : entry.getValue()) {
+                logger.i("    child: " + element.getSimpleName());
+            }
+        }
+    }
+
+    private String privateAutowiredErrorMessage(String fieldName, String parentName) {
+        return "Injected autowired fields CAN NOT be 'private'!!! Please check field ["
+                + fieldName + "] in class [" + parentName + "] of module [" + moduleName + "]. If it is Kotlin, you can add @JvmField to it";
     }
 }

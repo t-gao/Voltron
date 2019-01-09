@@ -62,16 +62,14 @@ public class RouteEndPointProcessor extends AbstractProcessor {
         filer = processingEnvironment.getFiler();
         elementUtils = processingEnvironment.getElementUtils();
         typeUtils = processingEnvironment.getTypeUtils();
-        logger = new Logger(processingEnvironment.getMessager());
-
-        logger.i("RouteEndPointProcessor init");
 
         // 从 build.gradle 里的配置读取 module name
         Map<String, String> options = processingEnv.getOptions();
         if (MapUtils.isNotEmpty(options)) {
             moduleName = options.get(Constants.KEY_MODULE_NAME);
-            logger.i("RouteEndPointProcessor init for module: " + moduleName);
         }
+        logger = new Logger(moduleName + "-RouteEndPointProcessor", processingEnvironment.getMessager());
+        logger.i("init");
 
         if (StringUtils.isNotEmpty(moduleName)) {
             moduleName = moduleName.replaceAll("[^0-9a-zA-Z_]+", "");
@@ -101,15 +99,18 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnvironment) {
-        logger.i("process started...");
+        logger.i("start process...");
         Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(EndPoint.class);
         if (!roundEnvironment.processingOver()) {
             logger.i("processing not over");
             if (elements != null && !elements.isEmpty()) {
+                logger.i("elements empty!");
                 for (Element element : elements) {
                     logger.i("processing annotated Element: ", element);
                     processElement(element);
                 }
+            } else {
+                logger.i("elements empty!");
             }
         } else {
             logger.i("processing over");

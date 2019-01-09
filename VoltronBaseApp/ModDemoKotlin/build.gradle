@@ -6,6 +6,14 @@ apply plugin: 'kotlin-android-extensions'
 kapt {
     arguments {
         arg("VOLTRON_ROUTER_MODULE_NAME", project.getName())
+
+        /**
+         * PRIVATE_AUTOWIRED_POLICY 可选值 :
+         *  * ABORT       --  报错并退出编译流程（默认行为）
+         *  * TRY_SETTER  --  尝试找到相应的 private 字段的 setter 方法
+         *
+         */
+        arg("PRIVATE_AUTOWIRED_POLICY", "TRY_SETTER")
     }
 }
 
