@@ -21,10 +21,7 @@ version versionName
 
 uploadArchives{ //暂时发布到本地仓库中
     repositories {
-        mavenDeployer {
-            //  NOTE: 需要根据自己开发机情况修改地址
-            repository(url: uri('/Users/gaojian/.my_mvn_repo/')) //自定义本地maven仓库的地址
-        }
+        mavenLocal()
     }
 }
 
