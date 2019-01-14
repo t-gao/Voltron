@@ -121,6 +121,12 @@ class MainActivity : AppCompatActivity() {
                     .stringExtra("url", "file:///android_asset/scheme-test.html")
                     .go()
         }
+        btn_start_multiple.setOnClickListener {
+            VRouter.startActivities(this,
+                    VRouter.with(this).route("/main/second").build(),
+                    VRouter.with(this).route("/main/third").build()
+            )
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

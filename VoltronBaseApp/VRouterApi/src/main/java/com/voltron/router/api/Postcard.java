@@ -325,6 +325,7 @@ public class Postcard {
             P.myExtras().putBundle(key, value);
             return this;
         }
+
         // 直接设置bundle数据
         public Builder setExtra(Bundle value) {
             P.extras = value;
@@ -335,6 +336,11 @@ public class Postcard {
 
         public boolean go() {
             return P.go();
+        }
+
+        @NonNull
+        public Postcard build() {
+            return P;
         }
     }
 }

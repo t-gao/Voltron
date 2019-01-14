@@ -95,6 +95,28 @@ class VRouterInternal {
         return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
     }
 
+    public static boolean startActivities(Activity activity, Postcard... postcards) {
+        if (postcards != null) {
+            if (postcards.length == 1) {
+                return go(postcards[0]);
+            } else if (activity != null) {
+                ArrayList<Intent> intents = new ArrayList<>();
+                for (Postcard postcard : postcards) {
+                    Intent i = buildActivityIntent(postcard);
+                    if (i != null) {
+                        intents.add(i);
+                    }
+                }
+                Intent[] intentArray = intents.toArray(new Intent[0]);
+                if (intentArray != null && intentArray.length > 0) {
+                    activity.startActivities(intentArray);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     static boolean go(@Nullable Postcard postcard) {
         if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
             return false;
@@ -200,6 +222,34 @@ class VRouterInternal {
 
     }
 
+    @Nullable
+    private static Intent buildActivityIntent(Postcard postcard) {
+        if (postcard == null || postcard.getContext() == null) {
+            return null;
+        }
+        String groupName = postcard.getGroup();
+        String route = postcard.getRoute();
+        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
+        if (endPointMeta == null) {
+            return null;
+        }
+        Class<?> endpointClass = endPointMeta.getEndPointClass();
+        if (endpointClass == null) {
+            Log.e(TAG, "CLASS NOT FOUND with route " + route + "!!!");
+            return null;
+        }
+        if (endPointMeta.getEndPointType() == EndPointType.ACTIVITY) {
+            Intent intent = new Intent(postcard.getContext(), endpointClass);
+            Bundle extras = postcard.getExtras();
+            if (extras != null) {
+                intent.putExtras(extras);
+            }
+            intent.setFlags(postcard.getIntentFlags());
+            return intent;
+        }
+        return null;
+    }
+
     private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
                                          @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
         try {
@@ -244,6 +294,7 @@ class VRouterInternal {
         schemeHandlerHashMap.put(scheme, handler);
     }
 
+    @Nullable
     private static IRouteSchemeHandler getSchemeHandler(String scheme) {
         if (schemeHandlerHashMap == null) {
             return null;
@@ -251,7 +302,9 @@ class VRouterInternal {
         return schemeHandlerHashMap.get(scheme);
     }
 
-    // 只截取://（testscheme://）之前的Scheme
+    /**
+     * 只截取 "://" 之前的 scheme，如 "testscheme://testhost/testpath" 中的 "testscheme"
+     */
     private static String getDeepLinkScheme(String route) {
         int endIndex = -1;
         if (TextUtils.isEmpty(route) || (endIndex = route.indexOf(AnnotationConsts.SCHEME_SUFFIX)) == -1) {

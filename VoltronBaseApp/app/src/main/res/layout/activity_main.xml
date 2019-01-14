@@ -97,6 +97,12 @@
             android:text="GO TO WEB"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp" />
-
+        <Button
+            android:id="@+id/btn_start_multiple"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START MULTIPLE"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp" />
     </LinearLayout>
 </ScrollView>
