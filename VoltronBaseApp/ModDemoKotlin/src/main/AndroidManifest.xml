@@ -4,6 +4,7 @@
 
     <application>
         <activity android:name=".KotlinTestActivity"></activity>
+        <activity android:name=".DemoServiceActivity"/>
     </application>
 
 </manifest>

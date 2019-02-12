@@ -2,6 +2,7 @@ package com.voltron.router.api;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -25,6 +26,10 @@ public class Postcard {
     int intentFlags;
     boolean forResult;
     int requestCode = -1;
+
+    boolean bindService = false; //作用于bindservice, 默认非bind启动
+    ServiceConnection conn = null; //作用于bindservice
+    int flags ; //作用于bindservice
 
     Postcard(Context context, Fragment fragment, String path, Bundle extras, int intentFlags,
              boolean forResult, int requestCode) {
@@ -336,6 +341,17 @@ public class Postcard {
 
         public boolean go() {
             return P.go();
+        }
+
+        /**
+         * 此处的conn全部由外部实现，不进行任何逻辑处理
+         * flags与binsService设置的flags保持一致
+         */
+        public Builder bindService(@NonNull ServiceConnection serviceConnection, int flags) {
+            P.conn = serviceConnection;
+            P.flags = flags;
+            P.bindService = true;
+            return this;
         }
 
         @NonNull

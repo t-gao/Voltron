@@ -216,6 +216,8 @@ class VRouterInternal {
         switch (endPointType) {
             case ACTIVITY:
                 return startActivity(context, endPointMeta, postcard, endpointClass);
+            case SERVICE:
+                return startService(context, postcard, endpointClass);
             default:
                 return false;
         }
@@ -250,6 +252,42 @@ class VRouterInternal {
         return null;
     }
 
+    /**
+     * 启动服务
+     * @param context
+     * @param postcard
+     * @param endpointClass
+     * @return
+     */
+    private static boolean startService(Context context, Postcard postcard, Class<?> endpointClass) {
+        try {
+            Intent intent = new Intent(context, endpointClass);
+            Bundle extras = postcard.getExtras();
+            if (extras != null) {
+                intent.putExtras(extras);
+            }
+            intent.setFlags(postcard.getIntentFlags());
+
+            if (postcard.bindService){
+                context.bindService(intent, postcard.conn, postcard.flags);
+            } else {
+                context.startService(intent);
+            }
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "START SERVICE ERROR ", e);
+            return false;
+        }
+    }
+
+    /**
+     * 启动activity or fragment
+     * @param context
+     * @param endPointMeta
+     * @param postcard
+     * @param endpointClass
+     * @return
+     */
     private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
                                          @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
         try {

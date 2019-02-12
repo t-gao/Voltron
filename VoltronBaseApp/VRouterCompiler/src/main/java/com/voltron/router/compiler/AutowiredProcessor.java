@@ -58,7 +58,7 @@ public class AutowiredProcessor extends AbstractProcessor {
 
     private Constants.PrivateAutowiredPolicy privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.ABORT;
 
-    // Contain field need autowired and his super class.
+    // Contain field need autowiored and his super class.
     private Map<TypeElement, List<Element>> parentAndChild = new HashMap<>();
 
     @Override

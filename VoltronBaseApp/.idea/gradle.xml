@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/LibNetwork" />
             <option value="$PROJECT_DIR$/LibsAbstraction" />
+            <option value="$PROJECT_DIR$/ModDemoInterface" />
             <option value="$PROJECT_DIR$/ModDemoJava" />
             <option value="$PROJECT_DIR$/ModDemoKotlin" />
             <option value="$PROJECT_DIR$/VRouterAnnotation" />

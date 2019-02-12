@@ -127,6 +127,13 @@ class MainActivity : AppCompatActivity() {
                     VRouter.with(this).route("/main/third").build()
             )
         }
+        btn_start_service.setOnClickListener {
+            VRouter.with(this)
+                    .scheme("voltron")
+                    .host("kotlin.com")
+                    .path("/test/service")
+                    .go()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

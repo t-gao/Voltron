@@ -8,6 +8,8 @@
         <activity android:name=".DemoSchemeHostPathActivity" />
         <activity android:name=".DemoPathOnlyActivity"></activity>
         <activity android:name=".DemoWebViewActivity"/>
+        <service android:name=".service.DemoServices"/>
+        <service android:name=".service.DemoBindServices"/>
     </application>
 
 </manifest>
