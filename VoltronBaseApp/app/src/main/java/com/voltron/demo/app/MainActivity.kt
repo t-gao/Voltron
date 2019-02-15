@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         btn_go_to_frag_container.setOnClickListener {
             startActivity(Intent(this@MainActivity, FragContainerActivity::class.java))
         }
+
         btn_deeplink_go_activity.setOnClickListener {
             VRouter.registerSchemeHandler("testscheme", object : IRouteSchemeHandler {
                 override fun handle(route: String?) {
@@ -102,6 +103,7 @@ class MainActivity : AppCompatActivity() {
                     .route("testscheme://m.test.com/modulea/demoa?EXT_HH=json")
                     .go()
         }
+
         btn_deeplink_go_webview.setOnClickListener {
             VRouter.registerSchemeHandler("https") { route ->
                 route?.apply {
@@ -115,23 +117,42 @@ class MainActivity : AppCompatActivity() {
                     .route("https://www.baidu.com")
                     .go()
         }
+
         btn_navurl.setOnClickListener {
             VRouter.with(this)
                     .route("/main/webview")
                     .stringExtra("url", "file:///android_asset/scheme-test.html")
                     .go()
         }
+
         btn_start_multiple.setOnClickListener {
             VRouter.startActivities(this,
                     VRouter.with(this).route("/main/second").build(),
                     VRouter.with(this).route("/main/third").build()
             )
         }
+
         btn_start_service.setOnClickListener {
             VRouter.with(this)
                     .scheme("voltron")
                     .host("kotlin.com")
                     .path("/test/service")
+                    .go()
+        }
+
+        btn_test_interceptor.setOnClickListener {
+            VRouter.with(this)
+                    .path("/main/second")
+                    .serializableExtra("test", TestSerializable("Donald Duck", 100))
+                    .parcelableExtra("testParcelable", TestParcelable("Mickey Mouse", 101))
+                    .intExtra("testInt", 99)
+                    .addInterceptor {
+                        it.postcard().mutate()
+                                .serializableExtra("test", TestSerializable("Donald Trump", 200))
+                                .parcelableExtra("testParcelable", TestParcelable("I'm gonna build a Great Wall!", 201))
+
+                        it.proceed()
+                    }
                     .go()
         }
     }

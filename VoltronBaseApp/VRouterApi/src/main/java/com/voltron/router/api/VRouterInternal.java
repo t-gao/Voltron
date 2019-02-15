@@ -95,16 +95,22 @@ class VRouterInternal {
         return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
     }
 
+    //TODO: handle interceptors
     public static boolean startActivities(Activity activity, Postcard... postcards) {
         if (postcards != null) {
             if (postcards.length == 1) {
-                return go(postcards[0]);
+                if (postcards[0] == null) {
+                    return false;
+                }
+                return go(postcards[0].getPostcardInternal());
             } else if (activity != null) {
                 ArrayList<Intent> intents = new ArrayList<>();
                 for (Postcard postcard : postcards) {
-                    Intent i = buildActivityIntent(postcard);
-                    if (i != null) {
-                        intents.add(i);
+                    if (postcard != null) {
+                        Intent i = buildActivityIntent(postcard.getPostcardInternal());
+                        if (i != null) {
+                            intents.add(i);
+                        }
                     }
                 }
                 Intent[] intentArray = intents.toArray(new Intent[0]);
@@ -117,8 +123,16 @@ class VRouterInternal {
         return false;
     }
 
-    static boolean go(@Nullable Postcard postcard) {
-        if (postcard == null || postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
+    static boolean go(@Nullable PostcardInternal postcard) {
+        if (postcard == null) {
+            return false;
+        }
+
+        if (!checkInterceptors(postcard)) {
+            return false;
+        }
+
+        if (postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
             return false;
         }
 
@@ -140,6 +154,18 @@ class VRouterInternal {
         }
 
         return go(postcard.getContext(), endPointMeta, postcard);
+    }
+
+    private static boolean checkInterceptors(@NonNull PostcardInternal postcard) {
+        VRouterInterceptorChain chain = (VRouterInterceptorChain) postcard.interceptorChain;
+        if (chain == null || !chain.hasNextInterceptor()) {
+            return true;
+        }
+
+        Interceptor next = chain.nextInterceptor();
+        next.intercept(chain);
+
+        return false;
     }
 
     // 加载分组内的路由信息
@@ -200,7 +226,7 @@ class VRouterInternal {
     }
 
     private static boolean go(@NonNull Context context, EndPointMeta endPointMeta,
-                              @NonNull Postcard postcard) {
+                              @NonNull PostcardInternal postcard) {
 
         String route = postcard.getRoute();
         Log.d(TAG, "go, route: " + route);
@@ -225,7 +251,7 @@ class VRouterInternal {
     }
 
     @Nullable
-    private static Intent buildActivityIntent(Postcard postcard) {
+    private static Intent buildActivityIntent(PostcardInternal postcard) {
         if (postcard == null || postcard.getContext() == null) {
             return null;
         }
@@ -259,7 +285,7 @@ class VRouterInternal {
      * @param endpointClass
      * @return
      */
-    private static boolean startService(Context context, Postcard postcard, Class<?> endpointClass) {
+    private static boolean startService(Context context, PostcardInternal postcard, Class<?> endpointClass) {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();
@@ -289,7 +315,7 @@ class VRouterInternal {
      * @return
      */
     private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
-                                         @NonNull Postcard postcard, @NonNull Class<?> endpointClass) {
+                                         @NonNull PostcardInternal postcard, @NonNull Class<?> endpointClass) {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();

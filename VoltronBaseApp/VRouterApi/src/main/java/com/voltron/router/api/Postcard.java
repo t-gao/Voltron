@@ -7,123 +7,72 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.text.TextUtils;
-
-import com.voltron.router.base.AnnotationUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Postcard {
-    Context context;
-    Fragment fragment;
 
-    String scheme;
-    String host;
-    String path;
-    String route;
-    Bundle extras;
-    int intentFlags;
-    boolean forResult;
-    int requestCode = -1;
+    private Builder B;
 
-    boolean bindService = false; //作用于bindservice, 默认非bind启动
-    ServiceConnection conn = null; //作用于bindservice
-    int flags ; //作用于bindservice
-
-    Postcard(Context context, Fragment fragment, String path, Bundle extras, int intentFlags,
-             boolean forResult, int requestCode) {
-
-        this.context = context;
-        this.fragment = fragment;
-        this.path = path;
-        this.extras = extras;
-        this.intentFlags = intentFlags;
-        this.forResult = forResult;
-        this.requestCode = requestCode;
+    private Postcard(@NonNull Builder b) {
+        B = b;
     }
 
-    Postcard(Context context) {
-        this.context = context;
+    private boolean go() {
+        return B.P.go();
     }
 
-    Context getContext() {
-        return context;
-    }
-
-    Fragment getFragment() {
-        return fragment;
-    }
-
-    String getGroup() {
-        String group = AnnotationUtil.extractGroupNameFromRoute(route);
-        if (TextUtils.isEmpty(group)) {
-            group = AnnotationUtil.extractGroupNameFromSchemeHost(scheme, host);
-        }
-        return group;
+    PostcardInternal getPostcardInternal() {
+        return B.P;
     }
 
     public String getScheme() {
-        return scheme;
+        return B.P.getScheme();
     }
 
     public String getHost() {
-        return host;
+        return B.P.getHost();
     }
 
     String getPath() {
-        return path;
+        return B.P.getPath();
     }
 
     public String getRoute() {
-        if (TextUtils.isEmpty(route)) {
-            route = AnnotationUtil.buildRouteFromSchemeHostPath(scheme, host, path);
-        }
-        return route;
-    }
-
-    Bundle getExtras() {
-        return extras;
-    }
-
-    int getIntentFlags() {
-        return intentFlags;
+        return B.P.getRoute();
     }
 
     public boolean isForResult() {
-        return forResult;
+        return B.P.isForResult();
     }
 
     public int getRequestCode() {
-        return requestCode;
+        return B.P.getRequestCode();
     }
 
-
-    @NonNull
-    private Bundle myExtras() {
-        Bundle ext = this.extras;
-        if (ext == null) {
-            ext = new Bundle();
-            this.extras = ext;
-        }
-        return ext;
+    public boolean hasExtra(String key) {
+        return B.P.hasExtra(key);
     }
 
     /**
-     * 跳转到指定页面
-     *
-     * @return 跳转结果
+     * 如需修改该 Postcard (比如在拦截器内），需调用该方法。
+     * 返回一个 {@link Builder}，对该 Builder 的修改就是对相应 Postcard 的修改。
+     * @return 该 Postcard 的修改器 {@link Builder}
      */
-    boolean go() {
-        return VRouterInternal.go(this);
+    public Builder mutate() {
+        return B;
     }
 
+    /**
+     * Builder for building or modifying a {@link Postcard} instance.
+     */
     public static class Builder {
 
-        private Postcard P;
+        private PostcardInternal P;
 
         public Builder(Context context) {
-            P = new Postcard(context);
+            P = new PostcardInternal(context);
         }
 
         /**
@@ -138,22 +87,22 @@ public class Postcard {
          * @return this
          */
         public Builder startWithFragment(Fragment fragment) {
-            P.fragment = fragment;
+            P.setFragment(fragment);
             return this;
         }
 
         public Builder scheme(String scheme) {
-            P.scheme = scheme;
+            P.setScheme(scheme);
             return this;
         }
 
         public Builder host(String host) {
-            P.host = host;
+            P.setHost(host);
             return this;
         }
 
         public Builder path(String path) {
-            P.path = path;
+            P.setPath(path);
             return this;
         }
 
@@ -164,23 +113,22 @@ public class Postcard {
          * @return this
          */
         public Builder route(String route) {
-            P.route = route;
+            P.setRoute(route);
             return this;
         }
 
         public Builder setIntentFlags(int flags) {
-            P.intentFlags = flags;
+            P.setIntentFlags(flags);
             return this;
         }
 
         public Builder addIntentFlags(int flags) {
-            P.intentFlags |= flags;
+            P.addIntentFlags(flags);
             return this;
         }
 
         public Builder forResult(int requestCode) {
-            P.forResult = true;
-            P.requestCode = requestCode;
+            P.forResult(requestCode);
             return this;
         }
 
@@ -309,7 +257,7 @@ public class Postcard {
             return this;
         }
 
-        public Builder parcelableArrayListExtra(String key, ArrayList<Parcelable> value) {
+        public Builder parcelableArrayListExtra(String key, ArrayList<? extends Parcelable> value) {
             P.myExtras().putParcelableArrayList(key, value);
             return this;
         }
@@ -333,14 +281,42 @@ public class Postcard {
 
         // 直接设置bundle数据
         public Builder setExtra(Bundle value) {
-            P.extras = value;
+            P.setExtras(value);
             return this;
         }
 
-        //TODO: OTHER putXxx methods of Bundle
+        public Builder removeExtra(String key) {
+            P.myExtras().remove(key);
+            return this;
+        }
 
+        public Builder clearExtras() {
+            P.clearExtras();
+            return this;
+        }
+
+        public Builder addInterceptor(Interceptor interceptor) {
+            P.addInterceptor(interceptor);
+            return this;
+        }
+
+        public Builder removeInterceptor(Interceptor interceptor) {
+            P.removeInterceptor(interceptor);
+            return this;
+        }
+
+        public Builder clearInterceptors() {
+            P.clearInterceptors();
+            return this;
+        }
+
+        /**
+         * 跳转到指定页面
+         *
+         * @return 跳转结果： true 跳转成功；false 被拦截或跳转失败
+         */
         public boolean go() {
-            return P.go();
+            return build().go();
         }
 
         /**
@@ -356,7 +332,9 @@ public class Postcard {
 
         @NonNull
         public Postcard build() {
-            return P;
+            Postcard postcard = new Postcard(this);
+            P.make(postcard);
+            return postcard;
         }
     }
 }

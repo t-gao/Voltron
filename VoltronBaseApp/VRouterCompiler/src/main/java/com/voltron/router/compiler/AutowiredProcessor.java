@@ -31,6 +31,7 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedOptions;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -44,6 +45,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 @AutoService(Processor.class)
+@SupportedOptions({Constants.KEY_MODULE_NAME, Constants.KEY_PRIVATE_AUTOWIRED_POLICY})
 public class AutowiredProcessor extends AbstractProcessor {
 
     private String moduleName = null;
@@ -58,7 +60,7 @@ public class AutowiredProcessor extends AbstractProcessor {
 
     private Constants.PrivateAutowiredPolicy privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.ABORT;
 
-    // Contain field need autowiored and his super class.
+    // Contain field need autowired and his super class.
     private Map<TypeElement, List<Element>> parentAndChild = new HashMap<>();
 
     @Override
