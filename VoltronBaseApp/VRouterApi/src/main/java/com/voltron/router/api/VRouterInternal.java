@@ -95,7 +95,14 @@ class VRouterInternal {
         return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
     }
 
-    //TODO: handle interceptors
+    /**
+     * Encapsulation of {@link Activity#startActivities(Intent[])}.
+     * If there are more than one postcards, their interceptors will be ignored.
+     *
+     * @param activity
+     * @param postcards
+     * @return
+     */
     public static boolean startActivities(Activity activity, Postcard... postcards) {
         if (postcards != null) {
             if (postcards.length == 1) {

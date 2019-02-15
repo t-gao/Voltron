@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.widget.Toast
 import com.voltron.demo.app.inject.TestParcelable
 import com.voltron.demo.app.inject.TestSerializable
@@ -146,6 +147,14 @@ class MainActivity : AppCompatActivity() {
                     .serializableExtra("test", TestSerializable("Donald Duck", 100))
                     .parcelableExtra("testParcelable", TestParcelable("Mickey Mouse", 101))
                     .intExtra("testInt", 99)
+                    .addInterceptor {
+                        Log.d("MainActivity", "interceptor 1")
+                        it.proceed()
+                    }
+                    .addInterceptor {
+                        Log.d("MainActivity", "interceptor 2")
+                        it.proceed()
+                    }
                     .addInterceptor {
                         it.postcard().mutate()
                                 .serializableExtra("test", TestSerializable("Donald Trump", 200))

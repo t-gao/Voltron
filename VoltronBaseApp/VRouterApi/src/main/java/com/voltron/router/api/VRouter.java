@@ -53,7 +53,8 @@ public class VRouter {
     }
 
     /**
-     * Same effect as in {@link Activity#startActivities(Intent[])}
+     * Same effect as in {@link Activity#startActivities(Intent[])}.
+     * If there are more than one postcards, their interceptors will be ignored.
      *
      * @param starter the starter
      * @param postcards one or more postcards of corresponding activities to start
