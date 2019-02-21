@@ -2,14 +2,14 @@ Voltron TODO list:
 [DONE] 1. 支持参数
 [DONE] 2. 更友好的调用方式
 3. 支持分类：
-    1）Activity
-    2）Fragment
-    3）android.app.Service
+   [DONE] 1）Activity
+   [DONE] 2）Fragment
+   [DONE] 3）android.app.Service
     4）获取接口实现
-4. 依赖注入 Autowired
-5. 支持拦截器
-6. 支持联系打开多个页面 （startActivities）
-7. 支持 H5
+[DONE] 4. 依赖注入 Autowired
+[DONE] 5. 支持拦截器
+[DONE] 6. 支持联系打开多个页面 （startActivities）
+[DONE] 7. 支持 H5
 8. 支持 React Native
 9. 支持 动态注册路由
 10. 支持原生热更新、插件化
