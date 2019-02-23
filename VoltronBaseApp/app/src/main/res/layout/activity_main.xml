@@ -8,14 +8,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context="com.voltron.demo.app.MainActivity">
+        tools:context="com.voltron.demo.app.MainActivity"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp" >
 
         <Button
             android:id="@+id/btn_go"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:text="GO" />
 
         <Button
@@ -116,6 +118,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TEST INTERCEPTOR"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp" />
+        <Button
+            android:id="@+id/btn_test_callback"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TEST CALLBACK"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="10dp" />
 

@@ -9,7 +9,7 @@ import android.widget.Toast
 import com.voltron.demo.app.inject.TestParcelable
 import com.voltron.demo.app.inject.TestSerializable
 import com.voltron.demo.app.utils.UrlUtil
-import com.voltron.router.api.IRouteSchemeHandler
+import com.voltron.router.api.NavCallback
 import com.voltron.router.api.VRouter
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -80,42 +80,44 @@ class MainActivity : AppCompatActivity() {
         }
 
         btn_deeplink_go_activity.setOnClickListener {
-            VRouter.registerSchemeHandler("testscheme", object : IRouteSchemeHandler {
-                override fun handle(route: String?) {
-                    route?.apply {
-                        val builder = VRouter.with(this@MainActivity)
-                                .route("/main/dispatch")
-                        val data = Bundle()
-                        if (UrlUtil.checkIsLegalDeepLinkPath(route)) {
-                            //解析需要跳转的参数
-                            data.putString("deeplink", UrlUtil.getRouterPath(route))
-                            UrlUtil.URLRequest(route)?.let {
-                                data.putSerializable("params", it)
-                            }
-                        } else {
-                            data.putString("deeplink", "")
-                        }
-                        builder.setExtra(data)
-                        builder.go()
-                    }
-                }
-            })
             VRouter.with(this)
                     .route("testscheme://m.test.com/modulea/demoa?EXT_HH=json")
+                    .addInterceptor {
+                        it.postcard()?.route?.apply {
+                            if (this.startsWith("testscheme://")) {
+                                val builder = VRouter.with(this@MainActivity)
+                                        .route("/main/dispatch")
+                                val data = Bundle()
+                                if (UrlUtil.checkIsLegalDeepLinkPath(this)) {
+                                    //解析需要跳转的参数
+                                    data.putString("deeplink", UrlUtil.getRouterPath(this))
+                                    UrlUtil.URLRequest(this)?.let {
+                                        data.putSerializable("params", it)
+                                    }
+                                } else {
+                                    data.putString("deeplink", "")
+                                }
+                                builder.setExtra(data)
+                                builder.go()
+                            }
+                        }
+                    }
                     .go()
         }
 
         btn_deeplink_go_webview.setOnClickListener {
-            VRouter.registerSchemeHandler("https") { route ->
-                route?.apply {
-                    VRouter.with(this@MainActivity)
-                            .route("/main/webview")
-                            .stringExtra("url", route)
-                            .go()
-                }
-            }
             VRouter.with(this@MainActivity)
                     .route("https://www.baidu.com")
+                    .addInterceptor {
+                        it.postcard()?.route?.apply {
+                            if (this.startsWith("http://") || this.startsWith("https://")) {
+                                VRouter.with(this@MainActivity)
+                                        .route("/main/webview")
+                                        .stringExtra("url", this)
+                                        .go()
+                            }
+                        }
+                    }
                     .go()
         }
 
@@ -162,6 +164,29 @@ class MainActivity : AppCompatActivity() {
 
                         it.proceed()
                     }
+                    .go()
+        }
+
+        btn_test_callback.setOnClickListener {
+            VRouter.with(this)
+//                    .path("/xxx/i-route-to-nothing")
+                    .path("/modulea/demoa")
+                    .stringExtra("EXT_HH", "EXT-----VALUE")
+                    .forResult(100)
+                    .callback(object : NavCallback {
+
+                        override fun onNotFound() {
+                            Log.d("MainActivity", "NavCallback onNotFound")
+                        }
+
+                        override fun onNavigated() {
+                            Log.d("MainActivity", "NavCallback onNavigated")
+                        }
+
+                        override fun onError() {
+                            Log.d("MainActivity", "NavCallback onError")
+                        }
+                    })
                     .go()
         }
     }

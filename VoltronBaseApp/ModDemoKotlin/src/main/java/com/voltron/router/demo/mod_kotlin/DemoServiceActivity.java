@@ -23,6 +23,8 @@ import com.voltron.router.api.VRouter;
 public class DemoServiceActivity extends AppCompatActivity {
     public static final String TAG = "DemoServiceActivity";
 
+    protected boolean bound;
+
     //自定义ServiceConnection去实现具体逻辑
     private  ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -63,6 +65,8 @@ public class DemoServiceActivity extends AppCompatActivity {
                         .stringExtra("url", "https://www.baidu.com")
                         .bindService(connection, Context.BIND_AUTO_CREATE)
                         .go();
+
+                bound = true;
             }
         });
     }
@@ -70,6 +74,9 @@ public class DemoServiceActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(connection);
+        if (bound) {
+            unbindService(connection);
+            bound = false;
+        }
     }
 }

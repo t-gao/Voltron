@@ -12,7 +12,6 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.voltron.router.EndPointType;
-import com.voltron.router.base.AnnotationConsts;
 import com.voltron.router.base.AnnotationUtil;
 import com.voltron.router.base.EndPointMeta;
 
@@ -32,8 +31,6 @@ class VRouterInternal {
     //  分组名groupName 和 该分组内的路由信息的映射关系
     private static HashMap<String, HashMap<String, EndPointMeta>> groups = new HashMap<>();
     private static HashMap<String, EndPointMeta> anonymousGroup;
-    // 缓存用户自定义的Scheme的处理
-    private static HashMap<String, IRouteSchemeHandler> schemeHandlerHashMap = new HashMap<>();
 
     static void init() {
         Log.d(TAG, "VROUTER GROUP >>>> init");
@@ -98,6 +95,7 @@ class VRouterInternal {
     /**
      * Encapsulation of {@link Activity#startActivities(Intent[])}.
      * If there are more than one postcards, their interceptors will be ignored.
+     * //TODO: callback and interceptors
      *
      * @param activity
      * @param postcards
@@ -139,30 +137,45 @@ class VRouterInternal {
             return false;
         }
 
-        if (postcard.getContext() == null || TextUtils.isEmpty(postcard.getRoute())) {
+        if (postcard.getContext() == null) {
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onError();
+            }
+            return false;
+        }
+
+        if (TextUtils.isEmpty(postcard.getRoute())) {
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onNotFound();
+            }
             return false;
         }
 
         String route = postcard.getRoute();
-        // handle deeplink scheme
-        String scheme = getDeepLinkScheme(route);
-        if (!TextUtils.isEmpty(scheme)) {
-            IRouteSchemeHandler schemeHandler = getSchemeHandler(scheme);
-            if (schemeHandler != null) {
-                schemeHandler.handle(route);
-            }
-        }
         String groupName = postcard.getGroup();
 
         EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
         if (endPointMeta == null) {
             Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onNotFound();
+            }
             return false;
         }
 
         return go(postcard.getContext(), endPointMeta, postcard);
     }
 
+    /**
+     * check if all the interceptors have been handled.
+     * 检查是否所有的拦截器都已经处理完了。
+     *
+     * @param postcard postcard
+     * @return true if all the interceptors have been handled; false else.
+     */
     private static boolean checkInterceptors(@NonNull PostcardInternal postcard) {
         VRouterInterceptorChain chain = (VRouterInterceptorChain) postcard.interceptorChain;
         if (chain == null || !chain.hasNextInterceptor()) {
@@ -241,6 +254,10 @@ class VRouterInternal {
         Class<?> endpointClass = endPointMeta.getEndPointClass();
         if (endpointClass == null) {
             Log.e(TAG, "CLASS NOT FOUND with route " + route + "!!!");
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onNotFound();
+            }
             return false;
         }
 
@@ -252,6 +269,10 @@ class VRouterInternal {
             case SERVICE:
                 return startService(context, postcard, endpointClass);
             default:
+                NavCallback cb = postcard.getCallback();
+                if (cb != null) {
+                    cb.onNotFound();
+                }
                 return false;
         }
 
@@ -306,9 +327,19 @@ class VRouterInternal {
             } else {
                 context.startService(intent);
             }
+
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onNavigated();
+            }
+
             return true;
         } catch (Exception e) {
             Log.e(TAG, "START SERVICE ERROR ", e);
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onError();
+            }
             return false;
         }
     }
@@ -351,36 +382,20 @@ class VRouterInternal {
                 }
             }
 
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onNavigated();
+            }
+
             return true;
         } catch (Exception e) {
             Log.e(TAG, "START ACTIVITY ERR ", e);
+            NavCallback cb = postcard.getCallback();
+            if (cb != null) {
+                cb.onError();
+            }
             return false;
         }
     }
 
-    static void registerSchemeHandler(String scheme, IRouteSchemeHandler handler) {
-        if (schemeHandlerHashMap == null) {
-            schemeHandlerHashMap = new HashMap<>();
-        }
-        schemeHandlerHashMap.put(scheme, handler);
-    }
-
-    @Nullable
-    private static IRouteSchemeHandler getSchemeHandler(String scheme) {
-        if (schemeHandlerHashMap == null) {
-            return null;
-        }
-        return schemeHandlerHashMap.get(scheme);
-    }
-
-    /**
-     * 只截取 "://" 之前的 scheme，如 "testscheme://testhost/testpath" 中的 "testscheme"
-     */
-    private static String getDeepLinkScheme(String route) {
-        int endIndex = -1;
-        if (TextUtils.isEmpty(route) || (endIndex = route.indexOf(AnnotationConsts.SCHEME_SUFFIX)) == -1) {
-            return "";
-        }
-        return route.substring(0, endIndex);
-    }
 }

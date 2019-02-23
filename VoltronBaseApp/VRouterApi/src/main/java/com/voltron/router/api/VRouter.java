@@ -43,16 +43,6 @@ public class VRouter {
     }
 
     /**
-     * register scheme Handler
-     *
-     * @param scheme  eg: http/https/myscheme
-     * @param handler the handler to handle the route to dispatch
-     */
-    public static void registerSchemeHandler(String scheme, IRouteSchemeHandler handler) {
-        VRouterInternal.registerSchemeHandler(scheme, handler);
-    }
-
-    /**
      * Same effect as in {@link Activity#startActivities(Intent[])}.
      * If there are more than one postcards, their interceptors will be ignored.
      *

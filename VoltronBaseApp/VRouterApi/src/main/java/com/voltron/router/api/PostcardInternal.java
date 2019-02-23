@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 
@@ -30,6 +31,7 @@ class PostcardInternal {
 
     private ArrayList<Interceptor> interceptors = new ArrayList<>();
     Interceptor.Chain interceptorChain;
+    private NavCallback callback;
 
     PostcardInternal(Context context, Fragment fragment, String path, Bundle extras, int intentFlags,
                      boolean forResult, int requestCode) {
@@ -66,11 +68,11 @@ class PostcardInternal {
         return route;
     }
 
-    public boolean isForResult() {
+    boolean isForResult() {
         return forResult;
     }
 
-    public int getRequestCode() {
+    int getRequestCode() {
         return requestCode;
     }
 
@@ -106,6 +108,15 @@ class PostcardInternal {
             this.extras = ext;
         }
         return ext;
+    }
+
+    void callback(@Nullable NavCallback callback) {
+        this.callback = callback;
+    }
+
+    @Nullable
+    NavCallback getCallback() {
+        return callback;
     }
 
     void addInterceptor(Interceptor interceptor) {
