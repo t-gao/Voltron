@@ -11,6 +11,7 @@ import android.support.v4.app.Fragment;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class Postcard {
 
@@ -26,6 +27,10 @@ public class Postcard {
 
     PostcardInternal getPostcardInternal() {
         return B.P;
+    }
+
+    public Context getContext() {
+        return B.P.context;
     }
 
     public String getScheme() {
@@ -125,6 +130,11 @@ public class Postcard {
 
         public Builder addIntentFlags(int flags) {
             P.addIntentFlags(flags);
+            return this;
+        }
+
+        public Builder forResult(boolean forResult, int requestCode) {
+            P.forResult(forResult, requestCode);
             return this;
         }
 
@@ -275,13 +285,41 @@ public class Postcard {
          * @param value value
          * @return this
          */
-        public Builder bundleExtra(String key, Bundle value) {
+        public Builder bundleExtra(String key, @Nullable Bundle value) {
             P.myExtras().putBundle(key, value);
             return this;
         }
 
-        // 直接设置bundle数据
-        public Builder setExtra(Bundle value) {
+        /**
+         * Inserts all the key-value mappings into this postcard's extras.
+         * 将 bundle 内的全部 key-value 对添加进 extras.
+         *
+         * @param bundle a Bundle
+         * @return this
+         */
+        public Builder putExtras(@Nullable Bundle bundle) {
+            if (bundle != null) {
+                P.myExtras().putAll(bundle);
+            }
+            return this;
+        }
+
+        public Builder putStringMapExtras(@Nullable Map<String, String> map) {
+            if (map != null && !map.isEmpty()) {
+                Bundle bundle = new Bundle();
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    bundle.putString(entry.getKey(), entry.getValue());
+                }
+                P.myExtras().putAll(bundle);
+            }
+            return this;
+        }
+
+        /**
+         * Overrides extras.
+         * 直接设置 bundle 数据, 会覆盖现有 extras。
+         */
+        public Builder setExtra(@Nullable Bundle value) {
             P.setExtras(value);
             return this;
         }

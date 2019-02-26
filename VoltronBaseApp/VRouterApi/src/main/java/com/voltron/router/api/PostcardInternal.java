@@ -135,6 +135,11 @@ class PostcardInternal {
         intentFlags |= flags;
     }
 
+    void forResult(boolean forResult, int requestCode) {
+        this.forResult = forResult;
+        this.requestCode = requestCode;
+    }
+
     void forResult(int requestCode) {
         this.forResult = true;
         this.requestCode = requestCode;
