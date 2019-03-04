@@ -3,8 +3,9 @@
     package="com.voltron.router.demo.mod_kotlin">
 
     <application>
-        <activity android:name=".KotlinTestActivity"></activity>
-        <activity android:name=".DemoServiceActivity"/>
+        <activity android:name=".TestInheritActivity" />
+        <activity android:name=".KotlinTestActivity" />
+        <activity android:name=".DemoServiceActivity" />
     </application>
 
 </manifest>

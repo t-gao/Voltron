@@ -11,6 +11,7 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.voltron.router.gradle.autowired.asm.AutowiredClassVisitor;
+import com.voltron.router.gradle.autowired.preprocess.PreProcessAutowiredClassVisitor;
 import com.voltron.router.gradle.utils.Logger;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -43,9 +44,15 @@ public class AutowiredTransform extends Transform {
     private static final String AUTOWIRED_SUFFIX = "__Autowired";
     private static final String AUTOWIRED_CLASS_SUFFIX = AUTOWIRED_SUFFIX + SdkConstants.DOT_CLASS;
 
+    private boolean isPreProcess = false;
+
+    public AutowiredTransform(boolean isPreProcess) {
+        this.isPreProcess = isPreProcess;
+    }
+
     @Override
     public String getName() {
-        return "VRouterAutowiredTransform";
+        return (isPreProcess ? "PreProcess" : "") + "VRouterAutowiredTransform";
     }
 
     @Override
@@ -165,8 +172,13 @@ public class AutowiredTransform extends Transform {
         try {
             ClassReader cr = new ClassReader(sourceClassBytes);
             ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-            AutowiredClassVisitor cv = new AutowiredClassVisitor(cw);
-            cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            if (isPreProcess) {
+                PreProcessAutowiredClassVisitor cv = new PreProcessAutowiredClassVisitor(cw);
+                cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            } else {
+                AutowiredClassVisitor cv = new AutowiredClassVisitor(cw);
+                cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            }
             byte[] modifiedClassBytes = cw.toByteArray();
             Logger.i("returning modifiedClassBytes, length: " + (modifiedClassBytes == null ? 0 : modifiedClassBytes.length));
             return modifiedClassBytes;
@@ -188,7 +200,12 @@ public class AutowiredTransform extends Transform {
                         .replace(dir.getAbsolutePath() + File.separator, "")
                         .replace(File.separator, ".").replace(".class", "");
 
-                modified = new File(temporaryDir, className.replace(".", "") + ".class");
+                if (isPreProcess) {
+                    modified = new File(temporaryDir, className.replace(".", "") + ".pre" + ".class");
+                } else {
+                    modified = new File(temporaryDir, className.replace(".", "") + ".class");
+                }
+
                 if (modified.exists()) {
                     modified.delete();
                 }
@@ -241,7 +258,7 @@ public class AutowiredTransform extends Transform {
         }
 
         String hexName = DigestUtils.md5Hex(fileAbsolutePath).substring(0, 8);
-        File optJar = new File(temporaryDir, hexName + file.getName());
+        File optJar = new File(temporaryDir, (isPreProcess ? "pre" : "") + hexName + file.getName());
         try {
             JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(optJar));
 

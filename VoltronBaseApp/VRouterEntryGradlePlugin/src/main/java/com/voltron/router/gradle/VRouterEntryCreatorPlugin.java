@@ -10,6 +10,8 @@ import org.gradle.api.Project;
 
 public class VRouterEntryCreatorPlugin implements Plugin<Project> {
 
+    private boolean preProcessEnabled = true;
+
     @Override
     public void apply(Project project) {
         Logger.init(project);
@@ -18,8 +20,12 @@ public class VRouterEntryCreatorPlugin implements Plugin<Project> {
 
         BaseExtension extension = project.getExtensions().findByType(BaseExtension.class);
         if (extension != null) {
+            if (preProcessEnabled) {
+                extension.registerTransform(new AutowiredTransform(true));
+            }
+
             extension.registerTransform(new VRouterEntryCreatorTransform());
-            extension.registerTransform(new AutowiredTransform());
+            extension.registerTransform(new AutowiredTransform(false));
         }
     }
 }
