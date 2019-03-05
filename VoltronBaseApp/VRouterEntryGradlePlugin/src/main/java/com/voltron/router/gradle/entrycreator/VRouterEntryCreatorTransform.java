@@ -33,6 +33,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+/**
+ * Creates bytecode for a class named "VRouterEntry" which has a method named init(ArrayList<String>)
+ * to be invoked by reflection during VRouter initialization to generate the runtime router-map.
+ *
+ * ```
+ *     public static void init(ArrayList<String> var0) {
+ *         var0.add(VRouter__M__ModDemoKotlin__G__.myName());
+ *         var0.add(VRouter__M__ModDemoKotlin__G__voltron.myName());
+ *         var0.add(VRouter__M__app__G__main.myName());
+ *         var0.add(VRouter__M__ModDemoJava__G__.myName());
+ *     }
+ * ```
+ * 创建一个名为 VRouterEntry 的类的字节码，这个类包含一个 init(ArrayList<String>) 方法，该方法供 VRouter 内部
+ * 在初始化的阶段通过反射调用，来生成运行时路由表。
+ */
 public class VRouterEntryCreatorTransform extends Transform {
 
     private static final String GENERATED_PACKAGE = "com.voltron.router.routes";

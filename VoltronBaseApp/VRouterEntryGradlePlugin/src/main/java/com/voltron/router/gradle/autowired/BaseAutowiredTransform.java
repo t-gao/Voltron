@@ -10,7 +10,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.voltron.router.gradle.autowired.asm.AutowiredClassVisitor;
+import com.voltron.router.gradle.autowired.autoinject.asm.AutowiredClassVisitor;
 import com.voltron.router.gradle.autowired.preprocess.PreProcessAutowiredClassVisitor;
 import com.voltron.router.gradle.utils.Logger;
 
@@ -40,13 +40,19 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
-public class AutowiredTransform extends Transform {
+/**
+ * This class traverses all classes and jar files that have @Autowired annotated fields in them.
+ * And prepare the class bytecodes to be modified.
+ *
+ * 这个类用来遍历所有编译出来的 class 文件和 jar 文件，找出那些包含 @Autowired 注解的字段的类，为编辑这些类的字节码做准备。
+ */
+public abstract class BaseAutowiredTransform extends Transform {
     private static final String AUTOWIRED_SUFFIX = "__Autowired";
     private static final String AUTOWIRED_CLASS_SUFFIX = AUTOWIRED_SUFFIX + SdkConstants.DOT_CLASS;
 
     private boolean isPreProcess = false;
 
-    public AutowiredTransform(boolean isPreProcess) {
+    public BaseAutowiredTransform(boolean isPreProcess) {
         this.isPreProcess = isPreProcess;
     }
 

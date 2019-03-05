@@ -1,4 +1,4 @@
-package com.voltron.router.gradle.autowired.asm;
+package com.voltron.router.gradle.autowired.autoinject.asm;
 
 import com.voltron.router.gradle.utils.Logger;
 

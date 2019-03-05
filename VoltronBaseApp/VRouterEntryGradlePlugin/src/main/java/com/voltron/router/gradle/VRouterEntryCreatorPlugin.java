@@ -1,7 +1,8 @@
 package com.voltron.router.gradle;
 
 import com.android.build.gradle.BaseExtension;
-import com.voltron.router.gradle.autowired.AutowiredTransform;
+import com.voltron.router.gradle.autowired.autoinject.AutoInjectAutowiredTransform;
+import com.voltron.router.gradle.autowired.preprocess.PreProcessAutowiredTransform;
 import com.voltron.router.gradle.entrycreator.VRouterEntryCreatorTransform;
 import com.voltron.router.gradle.utils.Logger;
 
@@ -9,8 +10,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 public class VRouterEntryCreatorPlugin implements Plugin<Project> {
-
-    private boolean preProcessEnabled = true;
 
     @Override
     public void apply(Project project) {
@@ -20,12 +19,9 @@ public class VRouterEntryCreatorPlugin implements Plugin<Project> {
 
         BaseExtension extension = project.getExtensions().findByType(BaseExtension.class);
         if (extension != null) {
-            if (preProcessEnabled) {
-                extension.registerTransform(new AutowiredTransform(true));
-            }
-
+            extension.registerTransform(new PreProcessAutowiredTransform());
             extension.registerTransform(new VRouterEntryCreatorTransform());
-            extension.registerTransform(new AutowiredTransform(false));
+            extension.registerTransform(new AutoInjectAutowiredTransform());
         }
     }
 }
