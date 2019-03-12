@@ -3,13 +3,13 @@
     package="com.voltron.router.demo.mod_java">
 <uses-permission android:name="android.permission.INTERNET"/>
     <application>
-        <activity android:name=".DemoAActivity" />
-        <activity android:name=".DemoSchemeActivity" />
-        <activity android:name=".DemoSchemeHostPathActivity" />
-        <activity android:name=".DemoPathOnlyActivity"></activity>
-        <activity android:name=".DemoWebViewActivity"/>
-        <service android:name=".service.DemoServices"/>
-        <service android:name=".service.DemoBindServices"/>
+        <activity android:name=".DemoAActivity"  android:label=".DemoAActivity" />
+        <activity android:name=".DemoSchemeActivity"  android:label=".DemoSchemeActivity" />
+        <activity android:name=".DemoSchemeHostPathActivity" android:label=".DemoSchemeHostPathActivity" />
+        <activity android:name=".DemoPathOnlyActivity" android:label=".DemoPathOnlyActivity" />
+        <activity android:name=".DemoWebViewActivity" android:label=".DemoWebViewActivity" />
+        <service android:name=".service.DemoServices" android:label=".service.DemoServices" />
+        <service android:name=".service.DemoBindServices" android:label=".service.DemoBindServices" />
     </application>
 
 </manifest>

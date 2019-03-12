@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         btn_go.setOnClickListener {
             VRouter.with(this)
                     .path("/modulea/demoa")
-                    .stringExtra("EXT_HH", "EXT-----VALUE")
+                    .stringExtra("extParam", "EXT-----VALUE")
                     .forResult(100)
                     .go()
         }
@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity() {
 
         btn_deeplink_go_activity.setOnClickListener {
             VRouter.with(this)
-                    .route("testscheme://m.test.com/modulea/demoa?EXT_HH=json")
+                    .route("testscheme://m.test.com/modulea/demoa?extParam=json")
                     .addInterceptor {
                         it.postcard()?.route?.apply {
                             if (this.startsWith("testscheme://")) {
@@ -171,7 +171,7 @@ class MainActivity : AppCompatActivity() {
             VRouter.with(this)
 //                    .path("/xxx/i-route-to-nothing")
                     .path("/modulea/demoa")
-                    .stringExtra("EXT_HH", "EXT-----VALUE")
+                    .stringExtra("extParam", "EXT-----VALUE")
                     .forResult(100)
                     .callback(object : NavCallback {
 

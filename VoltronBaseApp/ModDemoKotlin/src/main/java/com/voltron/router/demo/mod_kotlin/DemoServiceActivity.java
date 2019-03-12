@@ -51,7 +51,7 @@ public class DemoServiceActivity extends AppCompatActivity {
             public void onClick(View v) {
                 VRouter.with(DemoServiceActivity.this)
                         .route("/modulea/service")
-                        .stringExtra("url", "https://www.haohuan.com")
+                        .stringExtra("url", "https://www.test.com")
                         .go();
             }
         });

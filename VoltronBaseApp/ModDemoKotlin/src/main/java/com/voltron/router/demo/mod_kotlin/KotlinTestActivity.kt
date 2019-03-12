@@ -1,6 +1,5 @@
 package com.voltron.router.demo.mod_kotlin
 
-import android.os.Bundle
 import com.voltron.router.annotation.Autowired
 import com.voltron.router.annotation.EndPoint
 import kotlinx.android.synthetic.main.activity_kotlin_test.*

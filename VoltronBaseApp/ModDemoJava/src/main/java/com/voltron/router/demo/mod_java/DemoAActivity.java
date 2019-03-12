@@ -11,7 +11,7 @@ import com.voltron.router.annotation.EndPoint;
 @EndPoint(value = "/modulea/demoa")
 public class DemoAActivity extends AppCompatActivity implements View.OnClickListener {
     @Autowired
-    public String EXT_HH;
+    public String extParam;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +22,7 @@ public class DemoAActivity extends AppCompatActivity implements View.OnClickList
         findViewById(R.id.btn_test).setOnClickListener(this);
 
         TextView ext = findViewById(R.id.ext);
-        ext.setText("string param : " + EXT_HH);
+        ext.setText("string param : " + extParam);
     }
 
     @Override
