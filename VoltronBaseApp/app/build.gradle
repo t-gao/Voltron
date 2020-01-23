@@ -21,12 +21,12 @@ kapt {
 }
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion rootProject.compileSdkVersion
 
     defaultConfig {
         applicationId "com.voltron.demo.app"
-        minSdkVersion 16
-        targetSdkVersion 27
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
