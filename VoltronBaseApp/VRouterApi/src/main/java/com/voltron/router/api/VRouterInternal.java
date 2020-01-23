@@ -365,21 +365,25 @@ class VRouterInternal {
             Fragment fragment = postcard.getFragment();
             if (fragment != null) {
                 if (postcard.isForResult()) {
-                    fragment.startActivityForResult(intent, postcard.getRequestCode());
+                    fragment.startActivityForResult(intent, postcard.getRequestCode(), postcard.options);
                 } else {
-                    fragment.startActivity(intent);
+                    fragment.startActivity(intent, postcard.options);
                 }
             } else {
                 if (context instanceof Activity) {
                     if (postcard.isForResult()) {
-                        ((Activity) context).startActivityForResult(intent, postcard.getRequestCode());
+                        ((Activity) context).startActivityForResult(intent, postcard.getRequestCode(), postcard.options);
                     } else {
-                        ((Activity) context).startActivity(intent);
+                        ((Activity) context).startActivity(intent, postcard.options);
                     }
                 } else {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
+                    context.startActivity(intent, postcard.options);
                 }
+            }
+
+            if (context instanceof Activity && postcard.overrideEnterAnim != null && postcard.overrideExitAnim != null) {
+                ((Activity) context).overridePendingTransition(postcard.overrideEnterAnim, postcard.overrideExitAnim);
             }
 
             NavCallback cb = postcard.getCallback();

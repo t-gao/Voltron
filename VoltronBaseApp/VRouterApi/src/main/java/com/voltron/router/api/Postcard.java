@@ -8,6 +8,8 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.core.util.Pair;
+import android.view.View;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -351,6 +353,31 @@ public class Postcard {
 
         public Builder callback(@Nullable NavCallback callback) {
             P.callback(callback);
+            return this;
+        }
+
+        public Builder withSceneTransitionAnimation(View sharedElement, String sharedElementName) {
+            P.withSceneTransitionAnimation(sharedElement, sharedElementName);
+            return this;
+        }
+
+        public Builder withSceneTransitionAnimation(Pair<View, String>... sharedElements) {
+            P.withSceneTransitionAnimation(sharedElements);
+            return this;
+        }
+
+        public Builder addOptions(@Nullable Bundle options) {
+            P.addOptions(options);
+            return this;
+        }
+
+        public Builder setOptions(@Nullable Bundle options) {
+            P.setOptions(options);
+            return this;
+        }
+
+        public Builder overridePendingTransition(int enterAnim, int exitAnim) {
+            P.overridePendingTransition(enterAnim, exitAnim);
             return this;
         }
 

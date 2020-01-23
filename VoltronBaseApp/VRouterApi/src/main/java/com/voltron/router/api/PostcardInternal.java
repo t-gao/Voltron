@@ -1,12 +1,16 @@
 package com.voltron.router.api;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.fragment.app.Fragment;
+import androidx.core.util.Pair;
 import android.text.TextUtils;
+import android.view.View;
 
 import com.voltron.router.base.AnnotationUtil;
 
@@ -21,9 +25,13 @@ class PostcardInternal {
     String path;
     String route;
     Bundle extras;
+    Bundle options;
     int intentFlags;
     boolean forResult;
     int requestCode = -1;
+
+    Integer overrideEnterAnim = null;
+    Integer overrideExitAnim = null;
 
     boolean bindService = false; //作用于bindservice, 默认非bind启动
     ServiceConnection conn = null; //作用于bindservice
@@ -49,11 +57,11 @@ class PostcardInternal {
         this.context = context;
     }
 
-    public String getScheme() {
+    String getScheme() {
         return scheme;
     }
 
-    public String getHost() {
+    String getHost() {
         return host;
     }
 
@@ -61,7 +69,7 @@ class PostcardInternal {
         return path;
     }
 
-    public String getRoute() {
+    String getRoute() {
         if (TextUtils.isEmpty(route)) {
             route = AnnotationUtil.buildRouteFromSchemeHostPath(scheme, host, path);
         }
@@ -165,8 +173,47 @@ class PostcardInternal {
         this.path = path;
     }
 
-    void setExtras(Bundle value) {
+    void setExtras(@Nullable Bundle value) {
         this.extras = value;
+    }
+
+    void withSceneTransitionAnimation(View sharedElement, String sharedElementName) {
+        if (sharedElement != null && sharedElementName != null) {
+            Activity activity = context instanceof Activity ? (Activity) context : (fragment != null ? fragment.getActivity() : null);
+            if (activity != null) {
+                addOptions(ActivityOptionsCompat.makeSceneTransitionAnimation(activity, sharedElement, sharedElementName).toBundle());
+            }
+        }
+    }
+
+    void withSceneTransitionAnimation(Pair<View, String>... sharedElements) {
+        if (sharedElements != null && sharedElements.length > 0) {
+            Activity activity = context instanceof Activity ? (Activity) context : (fragment != null ? fragment.getActivity() : null);
+            if (activity != null) {
+                addOptions(ActivityOptionsCompat.makeSceneTransitionAnimation(activity, sharedElements).toBundle());
+            }
+        }
+    }
+
+    void addOptions(@Nullable Bundle options) {
+        if (options == null || options.isEmpty()) {
+            return;
+        }
+
+        if (this.options == null) {
+            this.options = options;
+        } else {
+            this.options.putAll(options);
+        }
+    }
+
+    void setOptions(@Nullable Bundle options) {
+        this.options = options;
+    }
+
+    void overridePendingTransition(int enterAnim, int exitAnim) {
+        this.overrideEnterAnim = enterAnim;
+        this.overrideExitAnim = exitAnim;
     }
 
     void make(Postcard postcard) {
