@@ -4,25 +4,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.util.Pair;
 
 import com.voltron.router.EndPointType;
-import com.voltron.router.base.AnnotationConsts;
-import com.voltron.router.base.StringUtils;
 
 public class VRouter {
 
     public static void init() {
-        VRouterInternal.init();
+        init(null, (Interceptor[]) null);
     }
 
-    @Nullable
-    public static Pair<EndPointType, Class> resolveEndPoint(String scheme, String host, String path) {
-        host = StringUtils.ensureNoneNullString(host);
-        path = StringUtils.ensureNoneNullString(path);
-        String route = TextUtils.isEmpty(scheme) ? (host + path) : (scheme + AnnotationConsts.SCHEME_SUFFIX + host + path);
-        return resolveEndPoint(route);
+    public static void init(@Nullable NavHandler navHandler, @Nullable Interceptor... commonRouteInterceptors) {
+        VRouterInternal.init(navHandler, commonRouteInterceptors);
     }
 
     @Nullable
@@ -52,5 +45,36 @@ public class VRouter {
      */
     public static boolean startActivities(Activity starter, Postcard... postcards) {
         return VRouterInternal.startActivities(starter, postcards);
+    }
+
+    /**
+     * 正数表示已处理，VRouter 内部将不再处理；
+     * 负数表示未处理，需要VRouter 内部处理跳转；
+     * 0 表示不支持的 scheme.
+     */
+    public static final class NavigationTypes {
+        public static final int NOT_SUPPORTED = 0;          // 不支持的 scheme
+
+        public static final int NATIVE_HANDLED = 1;         // 原生实现，已处理
+        public static final int RN_HANDLED = 2;             // RN实现，已处理
+        public static final int WEB_HANDLED = 3;            // Web实现，已处理
+        public static final int UNKNOWN_HANDLED = 10000;   // 未知scheme，已处理
+        // 其他正数 - 其他，已处理；
+
+        public static final int NATIVE_NOT_HANDLED = -1;    // 原生实现，未处理
+        public static final int RN_NOT_HANDLED = -2;        // RN实现，未处理
+        public static final int WEB_NOT_HANDLED = -3;       // Web实现，未处理
+        public static final int UNKNOWN_NOT_HANDLED = -10000;   // 未知scheme，未处理
+        // 其他负数 - 其他，未处理；
+
+        /**
+         * 判断给定的跳转类型是否表示已处理。
+         * @param navType
+         * @return
+         */
+        public static boolean isHandled(int navType) {
+            return navType > 0;
+        }
+
     }
 }

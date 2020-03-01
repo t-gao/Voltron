@@ -12,9 +12,11 @@ import kotlinx.android.synthetic.main.activity_third.*
 class ThirdActivity : AppCompatActivity() {
 
     @Autowired(name = "test")
+    @JvmField
     var testSerializable: TestSerializable? = null //取key优先级，指定的name优先级比较高，然后是变量名称
 
     @Autowired
+    @JvmField
     var testParcelable: TestParcelable? = null
 
     @Autowired

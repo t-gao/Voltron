@@ -7,6 +7,8 @@ public enum EndPointType {
     FRAGMENT(2, "android.app.Fragment"),
     FRAGMENT_V4(3, "android.support.v4.app.Fragment"),
     PARCELABLE(4, "android.os.Parcelable"),
+    RN(1001, ""),
+    WEB(1002, ""),
     OTHER(-1, "");
 
     int id;

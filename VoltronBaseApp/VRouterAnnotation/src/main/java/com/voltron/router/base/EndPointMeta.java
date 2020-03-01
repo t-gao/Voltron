@@ -2,19 +2,26 @@ package com.voltron.router.base;
 
 import com.voltron.router.EndPointType;
 
-import javax.lang.model.element.Element;
-
+/**
+ * 封装了路由目标点的信息，如目标点类型、目标点Class等。
+ * 该信息通过用由发起方传递来的路由 route（其中包含目标点的唯一key）查找而来。
+ *
+ * NOTE: 由路由框架内部使用，业务层不应该直接使用该类。
+ */
 public class EndPointMeta {
+
+    /**
+     * 目标唯一key
+     */
+    private String endPointKey;
+
     private String group;
 
     private Class endPointClass;
 
-    private Element element;
-
-
     private String scheme;
-    private String host;
-    private String path;
+//    private String host;
+//    private String path;
 
     /**
      * 完整路由路径，[scheme]://[host][path]，或 [host][path]
@@ -32,49 +39,38 @@ public class EndPointMeta {
      */
     private EndPointType endPointType;
 
-    private EndPointMeta(String group, String scheme, String host, String path, String value,
-                         String route, Class endPointClass, EndPointType endPointType) {
+    private EndPointMeta(String endPointKey, String group, String scheme, String value, String route,
+                         Class endPointClass, EndPointType endPointType) {
+        this.endPointKey = endPointKey;
         this.group = group;
         this.scheme = scheme;
-        this.host = host;
-        this.path = path;
+//        this.host = host;
+//        this.path = path;
         this.value = value;
         this.route = route;
         this.endPointClass = endPointClass;
         this.endPointType = endPointType;
     }
 
-    public EndPointMeta(String group, String scheme, String host, String path, String value,
-                        String route, Element element, EndPointType endPointType) {
-        this.group = group;
-        this.scheme = scheme;
-        this.host = host;
-        this.path = path;
-        this.value = value;
-        this.route = route;
-        this.element = element;
-        this.endPointType = endPointType;
-    }
-
-    public Element getElement() {
-        return element;
+    public String getEndPointKey() {
+        return endPointKey;
     }
 
     public String getGroup() {
         return group;
     }
 
-    public String getPath() {
-        return path;
-    }
+//    public String getPath() {
+//        return path;
+//    }
 
     public String getScheme() {
         return scheme;
     }
 
-    public String getHost() {
-        return host;
-    }
+//    public String getHost() {
+//        return host;
+//    }
 
     public String getRoute() {
         return route;
@@ -92,8 +88,8 @@ public class EndPointMeta {
         return endPointType;
     }
 
-    public static EndPointMeta build(String group, String scheme, String host, String path, String value,
+    public static EndPointMeta build(String endPointKey, String group, String scheme, String value,
                                      String route, Class endPointClass, EndPointType endPointType) {
-        return new EndPointMeta(group, scheme, host, path, value, route, endPointClass, endPointType);
+        return new EndPointMeta(endPointKey, group, scheme, value, route, endPointClass, endPointType);
     }
 }

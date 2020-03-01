@@ -8,6 +8,7 @@ import kotlinx.android.synthetic.main.activity_kotlin_test.*
 class KotlinTestActivity : KotlinTestBaseActivity() {
 
     @Autowired
+    @JvmField
     var testInt: Int = 0
 
     override fun layoutResId(): Int = R.layout.activity_kotlin_test

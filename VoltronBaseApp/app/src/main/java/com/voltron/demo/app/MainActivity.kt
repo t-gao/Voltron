@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
             VRouter.with(this)
                     .route("testscheme://m.test.com/modulea/demoa?extParam=json")
                     .addInterceptor {
-                        it.postcard()?.route?.apply {
+                        it.postcard().route?.apply {
                             if (this.startsWith("testscheme://")) {
                                 val builder = VRouter.with(this@MainActivity)
                                         .route("/main/dispatch")
@@ -174,6 +174,21 @@ class MainActivity : AppCompatActivity() {
                     .stringExtra("extParam", "EXT-----VALUE")
                     .forResult(100)
                     .callback(object : NavCallback {
+                        override fun onPending() {
+                            Log.d("MainActivity", "NavCallback onPending")
+                        }
+
+                        override fun onCancelled(cancelCode: Int, cancelMessage: CharSequence?) {
+                            Log.d("MainActivity", "NavCallback onCancelled, cancelCode:$cancelCode, cancelMessage: ${cancelMessage?.toString()}")
+                        }
+
+                        override fun onIntercepted() {
+                            Log.d("MainActivity", "NavCallback onIntercepted")
+                        }
+
+                        override fun onError(e: Throwable?) {
+                            Log.e("MainActivity", "NavCallback onError", e)
+                        }
 
                         override fun onNotFound() {
                             Log.d("MainActivity", "NavCallback onNotFound")
@@ -183,9 +198,6 @@ class MainActivity : AppCompatActivity() {
                             Log.d("MainActivity", "NavCallback onNavigated")
                         }
 
-                        override fun onError() {
-                            Log.d("MainActivity", "NavCallback onError")
-                        }
                     })
                     .go()
         }

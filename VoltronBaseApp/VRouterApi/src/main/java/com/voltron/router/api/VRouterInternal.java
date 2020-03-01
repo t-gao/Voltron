@@ -3,9 +3,11 @@ package com.voltron.router.api;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
@@ -18,6 +20,8 @@ import com.voltron.router.base.EndPointMeta;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,8 +36,14 @@ class VRouterInternal {
     private static HashMap<String, HashMap<String, EndPointMeta>> groups = new HashMap<>();
     private static HashMap<String, EndPointMeta> anonymousGroup;
 
-    static void init() {
+    private static Collection<Interceptor> commonRouteInterceptors = new ArrayList<>();
+    static NavHandler defaultNavHandler;
+
+    static void init(@Nullable NavHandler navHandler, @Nullable Interceptor... commonRouteInterceptors) {
         Log.d(TAG, "VROUTER GROUP >>>> init");
+        addCommonRouteInterceptors(commonRouteInterceptors);
+        VRouterInternal.defaultNavHandler = navHandler;
+
         try {
             // first, find the entry class
             Class entryClazz = Class.forName("com.voltron.router.routes.VRouterEntry");
@@ -77,19 +87,48 @@ class VRouterInternal {
         AnnotationUtil.injectAutowired(obj);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
+    @Nullable
     static Pair<EndPointType, Class> resolveEndPoint(String route) {
         if (TextUtils.isEmpty(route)) {
             return null;
         }
 
         String groupName = AnnotationUtil.extractGroupNameFromRoute(route);
-        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
-        if (endPointMeta == null) {
-            Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
+
+        int navType = VRouter.NavigationTypes.NOT_SUPPORTED;
+        NavHandler navHandler = VRouterInternal.defaultNavHandler;
+        if (navHandler != null) {
+            navType = navHandler.getNavigationType(route);
+        }
+
+        if (navType == VRouter.NavigationTypes.NOT_SUPPORTED) {
             return null;
         }
 
-        return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
+        if (navType == VRouter.NavigationTypes.NATIVE_NOT_HANDLED) {
+            EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
+            if (endPointMeta == null) {
+                Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
+                return null;
+            }
+
+            return new Pair<>(endPointMeta.getEndPointType(), endPointMeta.getEndPointClass());
+        } else {
+            return new Pair<>(getEndPointTypeByNavType(navType), null);
+        }
+    }
+
+    private static EndPointType getEndPointTypeByNavType(int navType) {
+        switch (navType) {
+            case VRouter.NavigationTypes.RN_NOT_HANDLED:
+            case VRouter.NavigationTypes.RN_HANDLED:
+                return EndPointType.RN;
+            case VRouter.NavigationTypes.WEB_NOT_HANDLED:
+            case VRouter.NavigationTypes.WEB_HANDLED:
+                return EndPointType.WEB;
+        }
+        return EndPointType.OTHER;
     }
 
     /**
@@ -101,13 +140,14 @@ class VRouterInternal {
      * @param postcards
      * @return
      */
+    @RequiresApi(api = Build.VERSION_CODES.HONEYCOMB)
     public static boolean startActivities(Activity activity, Postcard... postcards) {
         if (postcards != null) {
             if (postcards.length == 1) {
                 if (postcards[0] == null) {
                     return false;
                 }
-                return go(postcards[0].getPostcardInternal());
+                return go(postcards[0]);
             } else if (activity != null) {
                 ArrayList<Intent> intents = new ArrayList<>();
                 for (Postcard postcard : postcards) {
@@ -128,56 +168,201 @@ class VRouterInternal {
         return false;
     }
 
-    static boolean go(@Nullable PostcardInternal postcard) {
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
+    static boolean go(@Nullable Postcard pc) {
+        if (pc == null) {
+            return false;
+        }
+
+        PostcardInternal postcard = pc.getPostcardInternal();
         if (postcard == null) {
             return false;
         }
 
-        if (!checkInterceptors(postcard)) {
+        if (postcard.isCanceled()) {
+            onCancelled(postcard);
             return false;
+        }
+
+
+        if (postcard.isPending()) {
+            onPending(postcard);
+            return false;
+        }
+
+        if (!checkInterceptors(postcard)) {
+            onIntercepted(postcard);
+            return false;
+        }
+
+        // 如果拦截器已完成跳转，回调并return true
+        if (postcard.isNavigated()) {
+            onNavigated(postcard);
+            return true;
+        }
+
+        // 如果设置了不使用 "路由拦截器"，则不检查"路由拦截器"
+        if (!postcard.dontInterceptRoute && !checkRouteInterceptors(postcard)) {
+            onIntercepted(postcard);
+            return false;
+        }
+
+        // 如果拦截器已完成跳转，回调并return true
+        if (postcard.isNavigated()) {
+            onNavigated(postcard);
+            return true;
         }
 
         if (postcard.getContext() == null) {
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onError();
-            }
-            return false;
-        }
-
-        if (TextUtils.isEmpty(postcard.getRoute())) {
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onNotFound();
-            }
+            onError(postcard, null);
             return false;
         }
 
         String route = postcard.getRoute();
-        String groupName = postcard.getGroup();
 
-        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
-        if (endPointMeta == null) {
-            Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onNotFound();
-            }
+        if (TextUtils.isEmpty(route)) {
+            onNotFound(postcard);
             return false;
         }
 
-        return go(postcard.getContext(), endPointMeta, postcard);
+        String groupName = postcard.getGroup();
+
+        // 根据 scheme 分发
+        EndPointMeta endPointMeta = getEndPointMetaByGroupNameAndRoute(groupName, route);
+
+        // 如果设置了不拦截跳转逻辑，直接走默认原生实现
+        if (postcard.dontInterceptNavigation) {
+            return goNative(postcard, endPointMeta);
+        }
+
+        NavHandler navHandler = postcard.getNavHandler();
+        if (navHandler == null) {
+            // 如果上册未注册跳转处理器，走默认原生处理
+            return goNative(postcard, endPointMeta);
+        } else {
+
+            if (postcard.isPending()) {
+                navHandler.onPending(pc);
+                return false;
+            }
+
+            int navType = navHandler.onNavigation(pc);
+            if (navType == VRouter.NavigationTypes.NOT_SUPPORTED) {
+                onNotFound(postcard);
+                return false;
+            } else if (VRouter.NavigationTypes.isHandled(navType)) {
+                onNavigated(postcard);
+                return true;//已处理
+            } else {
+                switch (navType) {
+                    case VRouter.NavigationTypes.NATIVE_NOT_HANDLED:
+//                    case VRouter.NavigationTypes.UNKNOWN_NOT_HANDLED:
+                        return goNative(postcard, endPointMeta);
+                    case VRouter.NavigationTypes.RN_NOT_HANDLED:
+                        return goRn(postcard);
+                    case VRouter.NavigationTypes.WEB_NOT_HANDLED:
+                        return goWeb(postcard);
+                    default:
+                        onNotFound(postcard);
+                        return false;
+                }
+            }
+        }
+    }
+
+    // 已完成跳转，回调
+    private static void onNavigated(@NonNull PostcardInternal postcard) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            if (!postcard.isNavigatedCallbackCalled()) {
+                postcard.setNavigatedCallbackCalled(true);
+                cb.onNavigated();
+            }
+        }
+    }
+
+    // 未找到目标或不支持，回调
+    private static void onNotFound(@NonNull PostcardInternal postcard) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            cb.onNotFound();
+        }
+    }
+
+    // 被暂停时回调
+    private static void onPending(@NonNull PostcardInternal postcard) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            cb.onPending();
+        }
+    }
+
+    // 已被取消，回调
+    private static void onCancelled(@NonNull PostcardInternal postcard) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            cb.onCancelled(postcard.getCancelCode(), postcard.getCancelMessage());
+        }
+    }
+
+    // 被拦截，回调
+    private static void onIntercepted(@NonNull PostcardInternal postcard) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            cb.onIntercepted();
+        }
+    }
+
+    // 出错，回调
+    private static void onError(@NonNull PostcardInternal postcard, @Nullable Throwable e) {
+        NavCallback cb = postcard.getCallback();
+        if (cb != null) {
+            cb.onError(e);
+        }
+    }
+
+    // RN处理默认实现
+    private static boolean goRn(@NonNull PostcardInternal postcard) {
+        onNotFound(postcard);//FIXME
+        return false;
+    }
+
+    // Web处理默认实
+    private static boolean goWeb(@NonNull PostcardInternal postcard) {
+        onNotFound(postcard);//FIXME
+        return false;
+    }
+
+        /**
+         * check if all the interceptors have been handled.
+         * 检查是否所有的拦截器都已经处理完了。
+         *
+         * @param postcard postcard
+         * @return true if all the interceptors have been handled; false else.
+         */
+    private static boolean checkInterceptors(@NonNull PostcardInternal postcard) {
+        VRouterInterceptorChain chain = (VRouterInterceptorChain) postcard.interceptorChain;
+        if (chain == null || !chain.hasNextInterceptor()) {
+            return true;
+        }
+
+        Interceptor next = chain.nextInterceptor();
+        next.intercept(chain);
+
+        return false;
     }
 
     /**
-     * check if all the interceptors have been handled.
-     * 检查是否所有的拦截器都已经处理完了。
+     * check if all the route interceptors have been handled.
+     * 检查是否所有的 "路由拦截器" 都已经处理完了。
+     *
+     * "路由拦截器"的主要工作是在页面跳转发生前，修改路由。
      *
      * @param postcard postcard
-     * @return true if all the interceptors have been handled; false else.
+     * @return true if all the route interceptors have been handled; false else.
      */
-    private static boolean checkInterceptors(@NonNull PostcardInternal postcard) {
-        VRouterInterceptorChain chain = (VRouterInterceptorChain) postcard.interceptorChain;
+    private static boolean checkRouteInterceptors(@NonNull PostcardInternal postcard) {
+        VRouterInterceptorChain chain = (VRouterInterceptorChain) postcard.routeInterceptorChain;
         if (chain == null || !chain.hasNextInterceptor()) {
             return true;
         }
@@ -242,22 +427,28 @@ class VRouterInternal {
             return null;
         }
 
-        return group.get(route);
+        return group.get(AnnotationUtil.getEndPointKeyFromRoute(route));
     }
 
-    private static boolean go(@NonNull Context context, EndPointMeta endPointMeta,
-                              @NonNull PostcardInternal postcard) {
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
+    private static boolean goNative(@NonNull PostcardInternal postcard,
+                                    @Nullable EndPointMeta endPointMeta) {
 
         String route = postcard.getRoute();
         Log.d(TAG, "go, route: " + route);
 
+        if (endPointMeta == null) {
+            Log.e(TAG, "END POINT NOT FOUND with route " + route + "!!!");
+            onNotFound(postcard);
+            return false;
+        }
+
+        Context context = postcard.getContext();
+
         Class<?> endpointClass = endPointMeta.getEndPointClass();
         if (endpointClass == null) {
             Log.e(TAG, "CLASS NOT FOUND with route " + route + "!!!");
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onNotFound();
-            }
+            onNotFound(postcard);
             return false;
         }
 
@@ -265,14 +456,11 @@ class VRouterInternal {
         Log.d(TAG, "endPointType: " + endPointType.toString());
         switch (endPointType) {
             case ACTIVITY:
-                return startActivity(context, endPointMeta, postcard, endpointClass);
+                return startActivity(context, postcard, endpointClass);
             case SERVICE:
                 return startService(context, postcard, endpointClass);
             default:
-                NavCallback cb = postcard.getCallback();
-                if (cb != null) {
-                    cb.onNotFound();
-                }
+                onNotFound(postcard);
                 return false;
         }
 
@@ -317,29 +505,29 @@ class VRouterInternal {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();
+            Bundle urlQuery = postcard.getRouteUrlQueryAsBundle();
             if (extras != null) {
+                if (urlQuery != null) {
+                    extras.putAll(urlQuery);
+                }
                 intent.putExtras(extras);
+            } else if (urlQuery != null) {
+                intent.putExtras(urlQuery);
             }
             intent.setFlags(postcard.getIntentFlags());
 
             if (postcard.bindService){
-                context.bindService(intent, postcard.conn, postcard.flags);
+                context.bindService(intent, postcard.conn, postcard.bindServiceFlags);
             } else {
                 context.startService(intent);
             }
 
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onNavigated();
-            }
+            onNavigated(postcard);
 
             return true;
         } catch (Exception e) {
             Log.e(TAG, "START SERVICE ERROR ", e);
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onError();
-            }
+            onError(postcard, e);
             return false;
         }
     }
@@ -347,55 +535,81 @@ class VRouterInternal {
     /**
      * 启动activity or fragment
      * @param context
-     * @param endPointMeta
      * @param postcard
      * @param endpointClass
      * @return
      */
-    private static boolean startActivity(@NonNull Context context, EndPointMeta endPointMeta,
-                                         @NonNull PostcardInternal postcard, @NonNull Class<?> endpointClass) {
+    @RequiresApi(api = Build.VERSION_CODES.ECLAIR)
+    private static boolean startActivity(@NonNull Context context, @NonNull PostcardInternal postcard,
+                                         @NonNull Class<?> endpointClass) {
         try {
             Intent intent = new Intent(context, endpointClass);
             Bundle extras = postcard.getExtras();
+            Bundle urlQuery = postcard.getRouteUrlQueryAsBundle();
             if (extras != null) {
+                if (urlQuery != null) {
+                    extras.putAll(urlQuery);
+                }
                 intent.putExtras(extras);
+            } else if (urlQuery != null) {
+                intent.putExtras(urlQuery);
             }
             intent.setFlags(postcard.getIntentFlags());
 
             Fragment fragment = postcard.getFragment();
             if (fragment != null) {
                 if (postcard.isForResult()) {
-                    fragment.startActivityForResult(intent, postcard.getRequestCode());
+                    fragment.startActivityForResult(intent, postcard.getRequestCode(), postcard.options);
                 } else {
-                    fragment.startActivity(intent);
+                    fragment.startActivity(intent, postcard.options);
                 }
             } else {
                 if (context instanceof Activity) {
                     if (postcard.isForResult()) {
-                        ((Activity) context).startActivityForResult(intent, postcard.getRequestCode());
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            ((Activity) context).startActivityForResult(intent, postcard.getRequestCode(), postcard.options);
+                        } else {
+                            ((Activity) context).startActivityForResult(intent, postcard.getRequestCode());
+                        }
                     } else {
-                        ((Activity) context).startActivity(intent);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            ((Activity) context).startActivity(intent, postcard.options);
+                        } else {
+                            ((Activity) context).startActivity(intent);
+                        }
                     }
                 } else {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(intent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        context.startActivity(intent, postcard.options);
+                    } else {
+                        context.startActivity(intent);
+                    }
                 }
             }
 
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onNavigated();
+            if (context instanceof Activity && postcard.overrideEnterAnim != null && postcard.overrideExitAnim != null) {
+                ((Activity) context).overridePendingTransition(postcard.overrideEnterAnim, postcard.overrideExitAnim);
             }
+
+            onNavigated(postcard);
 
             return true;
         } catch (Exception e) {
             Log.e(TAG, "START ACTIVITY ERR ", e);
-            NavCallback cb = postcard.getCallback();
-            if (cb != null) {
-                cb.onError();
-            }
+            onError(postcard, e);
             return false;
         }
     }
 
+    @NonNull
+    static Collection<Interceptor> commonRouteInterceptors() {
+        return commonRouteInterceptors;
+    }
+
+    static void addCommonRouteInterceptors(@Nullable Interceptor... interceptors) {
+        if (interceptors != null && interceptors.length > 0) {
+            commonRouteInterceptors.addAll(Arrays.asList(interceptors));
+        }
+    }
 }

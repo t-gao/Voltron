@@ -3,16 +3,23 @@ package com.voltron.router.api;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
+import android.view.View;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 
+/**
+ * 封装了路由发起方的意图信息，可近似理解为 Android 的 Intent。
+ */
 public class Postcard {
 
     private Builder B;
@@ -22,7 +29,7 @@ public class Postcard {
     }
 
     private boolean go() {
-        return B.P.go();
+        return VRouterInternal.go(this);
     }
 
     PostcardInternal getPostcardInternal() {
@@ -41,12 +48,39 @@ public class Postcard {
         return B.P.getHost();
     }
 
-    String getPath() {
+    public String getPath() {
         return B.P.getPath();
     }
 
     public String getRoute() {
         return B.P.getRoute();
+    }
+
+    public String getEndPointKey() {
+        return B.P.getEndPointKey();
+    }
+
+    /**
+     * 获取 route url 里自带的参数（即 url 的 query 部分），返回一个 Map
+     * @return
+     */
+    @Nullable
+    public Map<String, String> getRouteUrlQuery() {
+        return B.P.getRouteUrlQuery();
+    }
+
+    /**
+     * 获取 route url 里自带的参数（即 url 的 query 部分），返回一个 Bundle
+     * @return
+     */
+    @Nullable
+    public Bundle getRouteUrlQueryAsBundle() {
+        return B.P.getRouteUrlQueryAsBundle();
+    }
+
+    @Nullable
+    public String getEncodedQueryStringOfRouteUrl() {
+        return B.P.getEncodedQueryStringOfRouteUrl();
     }
 
     public boolean isForResult() {
@@ -61,6 +95,89 @@ public class Postcard {
         return B.P.hasExtra(key);
     }
 
+    public void setPendingWithCodeAndMessage(int pendingCode, CharSequence pendingMessage) {
+        B.P.setPending(pendingCode, pendingMessage);
+    }
+
+    public boolean isPending() {
+        return B.P.isPending();
+    }
+
+    /**
+     * 是否因指定的 pendingCode 而处于 pending 状态
+     * @param pendingCode
+     * @return
+     */
+    public boolean isPendingOnCode(int pendingCode) {
+        return B.P.isPendingOnCode(pendingCode);
+    }
+
+    public int getPendingCode() {
+        return B.P.getPendingCode();
+    }
+
+    public String getOriginalScheme() {
+        return B.P.getOriginalScheme();
+    }
+
+    /**
+     * 清除所有pending状态并继续
+     */
+    public void resume() {
+        B.P.clearAllPendingCodes();
+        go();
+    }
+
+    /**
+     * 清除指定的pendingCode，并尝试继续
+     * @param pendingCode
+     */
+    public void resume(int pendingCode) {
+        B.P.clearPendingCode(pendingCode);
+        go();
+    }
+
+    public boolean isCanceled() {
+        return B.P.isCanceled();
+    }
+
+    public void cancel(int cancelCode, CharSequence cancelMessage) {
+        setCanceled(true, cancelCode, cancelMessage);
+    }
+
+    public void setCanceled(boolean canceled, int cancelCode, CharSequence cancelMessage) {
+        B.P.setCanceled(canceled, cancelCode, cancelMessage);
+    }
+
+    public int getFlags() {
+        return B.P.flags;
+    }
+
+    public boolean hasFlag(int flag) {
+        return (getFlags() & flag) != 0;
+    }
+
+    /**
+     * 添加标记
+     *
+     * @param flags
+     */
+    public void addFlags(int flags) {
+        B.P.addFlags(flags);
+    }
+
+    public void setFlags(int flags) {
+        B.P.setFlags(flags);
+    }
+
+    public void clearFlags(int flags) {
+        B.P.clearFlags(flags);
+    }
+
+    public void clearFlags() {
+        B.P.clearFlags();
+    }
+
     /**
      * 如需修改该 Postcard (比如在拦截器内），需调用该方法。
      * 返回一个 {@link Builder}，对该 Builder 的修改就是对相应 Postcard 的修改。
@@ -68,6 +185,27 @@ public class Postcard {
      */
     public Builder mutate() {
         return B;
+    }
+
+    public Bundle getExtras() {
+        return B.P.getExtras();
+    }
+
+    /**
+     * 是否已完成跳转
+     *
+     * @return
+     */
+    public boolean isNavigated() {
+        return B.P.isNavigated();
+    }
+
+    /**
+     * 设置是否已完成跳转
+     * @param navigated 是否已完成跳转
+     */
+    public void setNavigated(boolean navigated) {
+        this.B.P.setNavigated(navigated);
     }
 
     /**
@@ -120,6 +258,38 @@ public class Postcard {
          */
         public Builder route(String route) {
             P.setRoute(route);
+            return this;
+        }
+
+        /**
+         * 设置该postcard所要打开的端点（页面）的key
+         * @param endPointKey
+         * @return
+         */
+        public Builder endPointKey(String endPointKey) {
+            P.setEndPointKey(endPointKey);
+            return this;
+        }
+
+        /**
+         * 忽略 "路由拦截器"，即本次postcard不使用 "路由拦截器"
+         *
+         * @param ignore 是否忽略
+         * @return
+         */
+        public Builder ignoreRouteInterceptors(boolean ignore) {
+            P.setDontInterceptRoute(ignore);
+            return this;
+        }
+
+        /**
+         * 忽略跳转处理器，即本次postcard不拦截跳转逻辑
+         *
+         * @param ignore 是否忽略
+         * @return
+         */
+        public Builder ignoreNavigationInterceptors(boolean ignore) {
+            P.setDontInterceptNavigation(ignore);
             return this;
         }
 
@@ -188,11 +358,13 @@ public class Postcard {
             return this;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.FROYO)
         public Builder charSequenceArrayExtra(String key, CharSequence[] value) {
             P.myExtras().putCharSequenceArray(key, value);
             return this;
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.FROYO)
         public Builder charSequenceArrayListExtra(String key, ArrayList<CharSequence> value) {
             P.myExtras().putCharSequenceArrayList(key, value);
             return this;
@@ -334,12 +506,12 @@ public class Postcard {
             return this;
         }
 
-        public Builder addInterceptor(Interceptor interceptor) {
+        public Builder addInterceptor(@Nullable Interceptor interceptor) {
             P.addInterceptor(interceptor);
             return this;
         }
 
-        public Builder removeInterceptor(Interceptor interceptor) {
+        public Builder removeInterceptor(@Nullable Interceptor interceptor) {
             P.removeInterceptor(interceptor);
             return this;
         }
@@ -349,8 +521,53 @@ public class Postcard {
             return this;
         }
 
+        public Builder addRouteInterceptor(@Nullable Interceptor routeInterceptor) {
+            P.addRouteInterceptor(routeInterceptor);
+            return this;
+        }
+
+        public Builder removeRouteInterceptor(@Nullable Interceptor routeInterceptor) {
+            P.removeRouteInterceptor(routeInterceptor);
+            return this;
+        }
+
+        public Builder clearRouteInterceptors() {
+            P.clearRouteInterceptors();
+            return this;
+        }
+
         public Builder callback(@Nullable NavCallback callback) {
             P.callback(callback);
+            return this;
+        }
+
+        public Builder withSceneTransitionAnimation(View sharedElement, String sharedElementName) {
+            P.withSceneTransitionAnimation(sharedElement, sharedElementName);
+            return this;
+        }
+
+        public Builder withSceneTransitionAnimation(Pair<View, String>... sharedElements) {
+            P.withSceneTransitionAnimation(sharedElements);
+            return this;
+        }
+
+        public Builder addOptions(@Nullable Bundle options) {
+            P.addOptions(options);
+            return this;
+        }
+
+        public Builder setOptions(@Nullable Bundle options) {
+            P.setOptions(options);
+            return this;
+        }
+
+        public Builder navHandler(@Nullable NavHandler navHandler) {
+            P.setNavHandler(navHandler);
+            return this;
+        }
+
+        public Builder overridePendingTransition(int enterAnim, int exitAnim) {
+            P.overridePendingTransition(enterAnim, exitAnim);
             return this;
         }
 
@@ -369,7 +586,7 @@ public class Postcard {
          */
         public Builder bindService(@NonNull ServiceConnection serviceConnection, int flags) {
             P.conn = serviceConnection;
-            P.flags = flags;
+            P.bindServiceFlags = flags;
             P.bindService = true;
             return this;
         }
@@ -380,5 +597,6 @@ public class Postcard {
             P.make(postcard);
             return postcard;
         }
+
     }
 }

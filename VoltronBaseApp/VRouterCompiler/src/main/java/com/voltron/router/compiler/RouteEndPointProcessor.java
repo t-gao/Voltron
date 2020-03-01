@@ -48,13 +48,12 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
     private Logger logger;
     private Filer filer;
-    private Elements elementUtils;
     private Types typeUtils;
 
     // 分组信息
-    private HashMap<String, Set<EndPointMeta>> groups = new HashMap<>();
+    private HashMap<String, Set<EndPointMetaForProcessor>> groups = new HashMap<>();
     // group name 为空的分组
-    private Set<EndPointMeta> noNameGroup = new HashSet<>();
+    private Set<EndPointMetaForProcessor> noNameGroup = new HashSet<>();
 
     private TypeMirror typeActivity, typeFragment, typeFragmentV4, typeService, typeParcelable;
 
@@ -62,7 +61,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
         super.init(processingEnvironment);
         filer = processingEnvironment.getFiler();
-        elementUtils = processingEnvironment.getElementUtils();
+        Elements elementUtils = processingEnvironment.getElementUtils();
         typeUtils = processingEnvironment.getTypeUtils();
 
         // 从 build.gradle 里的配置读取 module name
@@ -71,7 +70,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             moduleName = options.get(Constants.KEY_MODULE_NAME);
         }
         logger = new Logger(moduleName + "-RouteEndPointProcessor", processingEnvironment.getMessager());
-        logger.i("init");
+        logger.w("init");
 
         if (StringUtils.isNotEmpty(moduleName)) {
             moduleName = moduleName.replaceAll("[^0-9a-zA-Z_]+", "");
@@ -106,9 +105,9 @@ public class RouteEndPointProcessor extends AbstractProcessor {
         if (!roundEnvironment.processingOver()) {
             logger.i("processing not over");
             if (elements != null && !elements.isEmpty()) {
-                logger.i("elements empty!");
+                logger.i("elements not empty!");
                 for (Element element : elements) {
-                    logger.i("processing annotated Element: ", element);
+                    logger.i("processing annotated Element: " + element.getSimpleName());
                     processElement(element);
                 }
             } else {
@@ -116,22 +115,23 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             }
         } else {
             logger.i("processing over");
+
+            try {
+                generateGroupFile("", noNameGroup);
+            } catch (IOException e) {
+                logger.e(e.getMessage());
+            }
+
             if (!groups.isEmpty()) {
-                for (Map.Entry<String, Set<EndPointMeta>> entry : groups.entrySet()) {
+                for (Map.Entry<String, Set<EndPointMetaForProcessor>> entry : groups.entrySet()) {
                     try {
                         generateGroupFile(entry.getKey(), entry.getValue());
                     } catch (IOException e) {
-                        e.printStackTrace();
                         logger.e(e.getMessage());
                     }
                 }
-
-                try {
-                    generateGroupFile("", noNameGroup);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    logger.e(e.getMessage());
-                }
+            } else {
+                logger.i("GROUPS EMPTY");
             }
         }
         logger.i("process end");
@@ -156,15 +156,19 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     }
 
     private void processElement(Element element) {
+        logger.i("processElement: " + element.getSimpleName());
+
         if (element.getKind() == ElementKind.CLASS) {
-            EndPointMeta endPointMeta = AnnotationUtil.buildEndPointMetaFromAnnotation(
+            EndPointMetaForProcessor endPointMeta = buildEndPointMetaFromAnnotation(
                     element.getAnnotation(EndPoint.class), element, getEndPointType(element));
 
             if (endPointMeta == null) {
+                logger.w("processElement built endPointMeta is NULL!" );
                 return;
             }
 
             if (StringUtils.isEmpty(endPointMeta.getRoute())) {
+                logger.w("processElement built endPointMeta's route is empty!" );
                 return;
             }
 
@@ -172,7 +176,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             if (StringUtils.isEmpty(groupName)) {
                 noNameGroup.add(endPointMeta);
             } else {
-                Set<EndPointMeta> groupEndPoints = groups.get(groupName);
+                Set<EndPointMetaForProcessor> groupEndPoints = groups.get(groupName);
                 if (groupEndPoints == null) {
                     groupEndPoints = new HashSet<>();
                     groups.put(groupName, groupEndPoints);
@@ -207,13 +211,14 @@ public class RouteEndPointProcessor extends AbstractProcessor {
      * @param endPointMetas 分组内的路由端点集合
      * @throws IOException IOException
      */
-    private void generateGroupFile(String groupName, Set<EndPointMeta> endPointMetas) throws IOException {
+    private void generateGroupFile(String groupName, Set<EndPointMetaForProcessor> endPointMetas) throws IOException {
         if (groupName == null) {
             groupName = "";
         }
         logger.i("generateGroupFile groupName: " + groupName);
 
         if (endPointMetas == null || endPointMetas.isEmpty()) {
+            logger.i("generateGroupFile endPointMetas empty!");
             return;
         }
 
@@ -240,13 +245,14 @@ public class RouteEndPointProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(groupParamSpec);
 
-        for (EndPointMeta endPointMeta : endPointMetas) {
+        for (EndPointMetaForProcessor endPointMeta : endPointMetas) {
             ClassName className = ClassName.get((TypeElement) endPointMeta.getElement());
-            String path = endPointMeta.getPath();
             String route = endPointMeta.getRoute();
-            initMethod.addStatement("routes.put($S, $T.build($S, $S, $S, $S, $S, $S, $T.class, $T." + endPointMeta.getEndPointType() + "))",
-                    route, EndPointMeta.class, groupName, endPointMeta.getScheme(), endPointMeta.getHost(),
-                    path, endPointMeta.getValue(), route, className, ClassName.get(EndPointType.class));
+            String endPointKey = AnnotationUtil.getEndPointKeyFromRoute(route);
+            initMethod.addStatement("routes.put($S, $T.build($S, $S, $S, $S, $S, $T.class, $T." + endPointMeta.getEndPointType() + "))",
+                    endPointKey, EndPointMeta.class, endPointKey, groupName, endPointMeta.getScheme(),
+                    endPointMeta.getValue(), route, className,
+                    ClassName.get(EndPointType.class));
         }
 
         String pkgName = Constants.GENERATED_PACKAGE;
@@ -267,5 +273,39 @@ public class RouteEndPointProcessor extends AbstractProcessor {
                         .addMethod(myNameMethod.build())
                         .build())
                 .build().writeTo(filer);
+    }
+
+    private EndPointMetaForProcessor buildEndPointMetaFromAnnotation(EndPoint endPointAnno,
+                                                                            Element element,
+                                                                           EndPointType endPointType) {
+
+        logger.i("buildEndPointMetaFromAnnotation: " + element.getSimpleName());
+
+        if (endPointAnno == null) {
+            return null;
+        }
+
+        String scheme = endPointAnno.scheme();
+        String host = endPointAnno.host();
+        String path = endPointAnno.path();
+
+        String value = endPointAnno.value();
+
+        String groupName = AnnotationUtil.extractGroupNameFromRoute(value);
+
+        logger.i("buildEndPointMetaFromAnnotation，scheme: " + scheme + ", host: " + host + ", path: " + path + ", value: " + value + ", groupName: " + groupName);
+
+        String route = value;
+        if (route.isEmpty()) {
+            logger.i("buildEndPointMetaFromAnnotation, ROUTE EMPTY!");
+            route = AnnotationUtil.buildRouteFromSchemeHostPath(scheme, host, path);
+        }
+
+        if (com.voltron.router.base.StringUtils.isEmpty(route)) {
+            logger.w("buildEndPointMetaFromAnnotation, ROUTE STILL EMPTY!");
+            return null;
+        }
+
+        return new EndPointMetaForProcessor(groupName, scheme, host, path, value, route, element, endPointType);
     }
 }

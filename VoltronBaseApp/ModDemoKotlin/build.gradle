@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-android-extensions'
@@ -13,19 +14,19 @@ kapt {
          *  * TRY_SETTER  --  尝试找到相应的 private 字段的 setter 方法
          *
          */
-        arg("PRIVATE_AUTOWIRED_POLICY", "TRY_SETTER")
+//        arg("PRIVATE_AUTOWIRED_POLICY", "TRY_SETTER")
     }
 }
 
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion compileSdkVer
 
 
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 27
+        minSdkVersion minSdkVer
+        targetSdkVersion targetSdkVer
         versionCode 1
         versionName "1.0"
 
@@ -48,7 +49,7 @@ dependencies {
     implementation project(':VRouterAnnotation')
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     kapt project(':VRouterCompiler')
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
