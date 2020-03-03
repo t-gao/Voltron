@@ -109,7 +109,7 @@ class MainActivity : AppCompatActivity() {
             VRouter.with(this@MainActivity)
                     .route("https://www.baidu.com")
                     .addInterceptor {
-                        it.postcard()?.route?.apply {
+                        it.postcard().route?.apply {
                             if (this.startsWith("http://") || this.startsWith("https://")) {
                                 VRouter.with(this@MainActivity)
                                         .route("/main/webview")
