@@ -1,6 +1,6 @@
 package com.voltron.demo.app
 
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.voltron.demo.app.inject.TestParcelable
 import com.voltron.demo.app.inject.TestSerializable

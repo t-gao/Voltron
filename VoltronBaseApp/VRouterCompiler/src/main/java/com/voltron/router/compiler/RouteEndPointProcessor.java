@@ -291,9 +291,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
         String value = endPointAnno.value();
 
-        String groupName = AnnotationUtil.extractGroupNameFromRoute(value);
-
-        logger.i("buildEndPointMetaFromAnnotation，scheme: " + scheme + ", host: " + host + ", path: " + path + ", value: " + value + ", groupName: " + groupName);
+        logger.i("buildEndPointMetaFromAnnotation，scheme: " + scheme + ", host: " + host + ", path: " + path + ", value: " + value);
 
         String route = value;
         if (route.isEmpty()) {
@@ -305,6 +303,9 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             logger.w("buildEndPointMetaFromAnnotation, ROUTE STILL EMPTY!");
             return null;
         }
+
+        String groupName = AnnotationUtil.extractGroupNameFromRoute(route);
+        logger.i("buildEndPointMetaFromAnnotation, groupName: " + groupName);
 
         return new EndPointMetaForProcessor(groupName, scheme, host, path, value, route, element, endPointType);
     }

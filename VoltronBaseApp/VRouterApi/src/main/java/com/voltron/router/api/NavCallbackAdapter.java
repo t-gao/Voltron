@@ -1,6 +1,6 @@
 package com.voltron.router.api;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * This adapter class provides empty implementations of the methods from {@link NavCallback}.

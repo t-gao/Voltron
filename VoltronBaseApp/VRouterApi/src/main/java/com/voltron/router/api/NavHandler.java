@@ -1,6 +1,6 @@
 package com.voltron.router.api;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Navigation handler, 路由跳转处理器。

@@ -3,7 +3,7 @@ package com.voltron.router.api;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Pair;
 
 import com.voltron.router.EndPointType;
