@@ -25,20 +25,17 @@ public class FragContainerActivity extends AppCompatActivity {
 
     private void showFrag() {
         Pair<EndPointType, Class> pair = VRouter.resolveEndPoint("voltron://demoa/frag1");
-        if (pair == null || pair.second == null ||
-                (pair.first != EndPointType.FRAGMENT_V4) && pair.first != EndPointType.FRAGMENT) {
+        if ( pair == null || pair.second == null || (pair.first != EndPointType.FRAGMENT_X) ) {
             return;
         }
 
-        if (pair.first == EndPointType.FRAGMENT_V4) {
-            try {
-                Fragment fragment = (Fragment) pair.second.newInstance();
-                getSupportFragmentManager().beginTransaction().replace(R.id.frag_container, fragment).commitAllowingStateLoss();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+        try {
+            Fragment fragment = (Fragment) pair.second.newInstance();
+            getSupportFragmentManager().beginTransaction().replace(R.id.frag_container, fragment).commitAllowingStateLoss();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 }

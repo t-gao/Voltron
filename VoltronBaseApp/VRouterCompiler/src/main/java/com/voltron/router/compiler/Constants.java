@@ -17,6 +17,7 @@ public interface Constants {
         String ACTIVITY = "android.app.Activity";
         String FRAGMENT = "android.app.Fragment";
         String FRAGMENT_V4 = "android.support.v4.app.Fragment";
+        String FRAGMENT_X = "androidx.fragment.app.Fragment";
         String SERVICE = "android.app.Service";
         String PARCELABLE = "android.os.Parcelable";
     }

@@ -55,7 +55,7 @@ public class RouteEndPointProcessor extends AbstractProcessor {
     // group name 为空的分组
     private Set<EndPointMetaForProcessor> noNameGroup = new HashSet<>();
 
-    private TypeMirror typeActivity, typeFragment, typeFragmentV4, typeService, typeParcelable;
+    private TypeMirror typeActivity, typeFragment, typeFragmentV4, typeFragmentX, typeService, typeParcelable;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -83,7 +83,27 @@ public class RouteEndPointProcessor extends AbstractProcessor {
 
         typeActivity = elementUtils.getTypeElement(Constants.TypeName.ACTIVITY).asType();
         typeFragment = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT).asType();
-        typeFragmentV4 = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
+
+        // 如果在 gralde.properties 里配置了 android.enableJetifier=true，那么这里
+        // elementUtils.getTypeElement("android.support.v4.app.Fragment") 自动返回的 type 是 androidx.fragment.app.Fragment
+        // 否则，返回 null
+        TypeElement fragV4TypeElement = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4);
+        if (fragV4TypeElement == null) {
+            logger.w("CAN NOT GET FRAGMENT V4");
+        } else {
+            typeFragmentV4 = fragV4TypeElement.asType();
+            // 如果在 gralde.properties 里配置了 android.enableJetifier=true, 那么这里会打印 "androidx.fragment.app.Fragment"
+            logger.i("typeFragmentV4 type string: " + typeFragmentV4.toString());
+        }
+
+        TypeElement fragXTypeElement = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_X);
+        if (fragXTypeElement == null) {
+            logger.w("CAN NOT GET FRAGMENT OF ANDROIDX");
+        } else {
+            typeFragmentX = fragXTypeElement.asType();
+            logger.i("typeFragmentX type string: " + typeFragmentX.toString());
+        }
+
         typeService = elementUtils.getTypeElement(Constants.TypeName.SERVICE).asType();
         typeParcelable = elementUtils.getTypeElement(Constants.TypeName.PARCELABLE).asType();
     }
@@ -144,13 +164,18 @@ public class RouteEndPointProcessor extends AbstractProcessor {
             return EndPointType.ACTIVITY;
         } else if (typeUtils.isSubtype(typeMirror, typeService)) {
             return EndPointType.SERVICE;
-        } else if (typeUtils.isSubtype(typeMirror, typeFragmentV4)) {
+        } else if (typeFragmentX != null && typeUtils.isSubtype(typeMirror, typeFragmentX)) {
+            logger.w("getEndPointType: element type is subtype of androidx fragment");
+            return EndPointType.FRAGMENT_X;
+        } else if (typeFragmentV4 != null && typeUtils.isSubtype(typeMirror, typeFragmentV4)) {
+            logger.w("getEndPointType: element type is subtype of fragment v4");
             return EndPointType.FRAGMENT_V4;
         } else if (typeUtils.isSubtype(typeMirror, typeFragment)) {
             return EndPointType.FRAGMENT;
         } else if (typeUtils.isSubtype(typeMirror, typeParcelable)) {
             return EndPointType.PARCELABLE;
         } else {
+            logger.w("getEndPointType: element type is other");
             return EndPointType.OTHER;
         }
     }

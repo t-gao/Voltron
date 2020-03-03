@@ -56,12 +56,13 @@ public class AutowiredProcessor extends AbstractProcessor {
     private Logger logger;
     private Types types;
     private TypeUtils typeUtils;
-    private Elements elementUtils;
 
     private Constants.PrivateAutowiredPolicy privateAutowiredPolicy = Constants.PrivateAutowiredPolicy.ABORT;
 
     // Contain field need autowired and his super class.
     private Map<TypeElement, List<Element>> parentAndChild = new HashMap<>();
+
+    private TypeMirror typeActivity, typeFragment, typeFragmentV4, typeFragmentX;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnvironment) {
@@ -69,7 +70,7 @@ public class AutowiredProcessor extends AbstractProcessor {
 
         mFiler = processingEnv.getFiler();                  // Generate class.
         types = processingEnv.getTypeUtils();               // Get type utils.
-        elementUtils = processingEnv.getElementUtils();      // Get class meta.
+        Elements elementUtils = processingEnv.getElementUtils();      // Get class meta.
         typeUtils = new TypeUtils(types, elementUtils);
 
         // 从 build.gradle 里的配置读取 module name
@@ -89,6 +90,30 @@ public class AutowiredProcessor extends AbstractProcessor {
 
         logger.i("init <<<");
         logger.i("privateAutowiredPolicyOption: " + privateAutowiredPolicyOption);
+
+        typeActivity = elementUtils.getTypeElement(Constants.TypeName.ACTIVITY).asType();
+        typeFragment = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT).asType();
+
+        // 如果在 gralde.properties 里配置了 android.enableJetifier=true，那么这里
+        // elementUtils.getTypeElement("android.support.v4.app.Fragment") 自动返回的 type 是 androidx.fragment.app.Fragment
+        // 否则，返回 null
+        TypeElement fragV4TypeElement = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4);
+        if (fragV4TypeElement == null) {
+            logger.w("CAN NOT GET FRAGMENT V4");
+        } else {
+            typeFragmentV4 = fragV4TypeElement.asType();
+            // 如果在 gralde.properties 里配置了 android.enableJetifier=true, 那么这里会打印 "androidx.fragment.app.Fragment"
+            logger.i("typeFragmentV4 type string: " + typeFragmentV4.toString());
+        }
+
+        TypeElement fragXTypeElement = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_X);
+        if (fragXTypeElement == null) {
+            logger.w("CAN NOT GET FRAGMENT OF ANDROIDX");
+        } else {
+            typeFragmentX = fragXTypeElement.asType();
+            logger.i("typeFragmentX type string: " + typeFragmentX.toString());
+        }
+
     }
 
     @Override
@@ -120,9 +145,6 @@ public class AutowiredProcessor extends AbstractProcessor {
     private void processElements() throws IllegalAccessException, IOException {
         logger.i("processElements");
 
-        TypeMirror activityTm = elementUtils.getTypeElement(Constants.TypeName.ACTIVITY).asType();
-        TypeMirror fragmentTm = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT).asType();
-        TypeMirror fragmentTmV4 = elementUtils.getTypeElement(Constants.TypeName.FRAGMENT_V4).asType();
         //构造生成的方法的参数，Object target （实际上是Activity或者Fragment）
         ParameterSpec objectParamSpec = ParameterSpec.builder(TypeName.OBJECT, "target").build();
 
@@ -135,18 +157,17 @@ public class AutowiredProcessor extends AbstractProcessor {
 
                 TypeMirror parentTm = parent.asType();
                 logger.i("type of parent: " + parentTm.toString());
-                logger.i("type of activityTm: " + activityTm.toString());
-                logger.i("type of fragmentTm: " + fragmentTm.toString());
-                logger.i("type of fragmentTmV4: " + fragmentTmV4.toString());
 
                 boolean isActivity = false;
                 boolean isFragment = false;
                 String statementPrefix = "";
-                if (types.isSubtype(parentTm, activityTm)) {  // Activity, then use getIntent()
+                if (types.isSubtype(parentTm, typeActivity)) {  // Activity, then use getIntent()
                     isActivity = true;
                     statementPrefix = "getIntent().";
                     logger.i("parent is an Activity");
-                } else if (types.isSubtype(parentTm, fragmentTm) || types.isSubtype(parentTm, fragmentTmV4)) {   // Fragment, then use getArguments()
+                } else if (types.isSubtype(parentTm, typeFragment)
+                        || (typeFragmentX != null && types.isSubtype(parentTm, typeFragmentX))
+                        || (typeFragmentV4 != null && types.isSubtype(parentTm, typeFragmentV4))) {   // Fragment, then use getArguments()
                     isFragment = true;
                     statementPrefix = "getArguments().";
                     logger.i("parent is a Fragment");
